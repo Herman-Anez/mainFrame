@@ -1,106 +1,110 @@
 # Comandos de linux
 
-### ls
+## ls
 
 List all files, but sorted by size and print the size.
 
 flags:
-* s size
-* S sort
 
-```
+* s size
+* S Sort, sort by file size, largest first
+* h human, --human-readable with -l and -s, print sizes like 1K 234M 2G etc.
+
+``` bash
 ls -sS
+ls -lh #muestra el tamaño de la lista
 ```
-### cd
+
+## cd
 
 Move into the previous directory
 
-```
+``` bash
 cd -
 ```
 
-### pwd
+## pwd
 
 Print the current working directory
 
-```
+``` bash
 pwd
 ```
 
-
-
-### echo
+## echo
 
 Print a value to the stardard output
 
-```
+``` bash
 echo "Hi Mom!"
 ```
 
+## mkdir
 
-
-mkdir
-### 
 Make a deeply nested directory and all it’s parent directories
 
-```
+``` bash
 mkdir -p new_directory/subdirectory
 ```
 
-### touch
+## touch
 
 Create a new file
 
-```
+``` bash
 touch diary.txt
+touch {1..10}.md # create 10 files
 ```
 
-### 
-
-rm
+## rm
 
 flags:
+
 * r recursive
 * f force
 
-```
+``` bash
 rm diary.txt
+rm -rf directory_to_remove # use carefully
 ```
 
-
-rm -rf directory_to_remove # use carefully
-
-### cat
+## cat
 
 Read a file
 
-```
+``` bash
 cat diary.txt
 ```
 
-### cp
+## cp
 
 Copy a file or directory recursively
 
-```
+``` bash
 cp -r source_dir destination_dir
 ```
 
-### mv
+## mv
 
 Move or rename a file
 
-```
+``` bash
 mv diary.txt useless-ramblings.txt
 ```
 
-### which
+## which
 
 Use the which command to find the path to a binary.
-command line
 
-```
+``` bash
 which ls
 ```
 
+## realpath
 
+get the full path of the file
+
+``` bash
+realpath hello.sh 
+
+```
