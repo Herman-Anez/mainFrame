@@ -1,11 +1,19 @@
 
+cd guestbook/
 
-
+npm build
+npm start
+[
 scp -P 2222  ~/.ssh/id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
 
-apt update
-apt install nginx
-sudo service nginx start // systemctl start nginx
+ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh" &&
+scp -P 2222 id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
+
+rsync -av -e "ssh -p 2222" --rsync-path="mkdir -p ~/.ssh/authorized_keys && rsync" --chmod=700 /home/herman/.ssh/id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
+
+ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh && echo '$(cat id_ed25519.pub)' > ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+]
+apt update && && apt install nginx && sudo service nginx start // systemctl start nginx
 
 # Crear una nueva sesión screen
 screen -S nextjs-server

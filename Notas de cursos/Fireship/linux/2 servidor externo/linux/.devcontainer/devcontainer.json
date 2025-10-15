@@ -17,7 +17,7 @@
         }
     },
 
-"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd\""
+"postCreateCommand": ["bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv\""]
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
