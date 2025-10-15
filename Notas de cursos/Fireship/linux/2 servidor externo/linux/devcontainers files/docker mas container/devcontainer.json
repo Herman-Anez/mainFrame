@@ -1,0 +1,25 @@
+{
+    "name": "Ubuntu Dev Container with SSH",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.remote-explorer",
+                "ms-vscode.remote-server"
+            ]
+        }
+    },
+
+    "portsAttributes": {
+        "22": {
+            "label": "SSH",
+            "onAutoForward": "notify"
+        }
+    },
+
+
+"postCreateCommand": "bash -c sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv"
+
+}

@@ -1,0 +1,20 @@
+
+{
+	"name": "Ubuntu",
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "20"
+		},
+		"ghcr.io/devcontainers/features/sshd:1": {}
+	},
+   "portsAttributes": {
+        "22": {
+            "label": "SSH",
+            "onAutoForward": "notify"
+        }
+    },
+
+"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd\""
+
+}

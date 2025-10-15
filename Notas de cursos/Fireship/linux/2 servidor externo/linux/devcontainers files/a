@@ -1,0 +1,63 @@
+{
+  "name": "Ubuntu con SSH",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest",
+      "gatewayPorts": "yes"
+    }
+  }
+}
+------------------------
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "Ubuntu",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"features": {
+		"ghcr.io/devcontainers/features/sshd:1": {}
+	}
+	,
+	
+	"postCreateCommand": "sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd"
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "uname -a",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
+
+{
+    "name": "Ubuntu Dev Container with SSH",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.remote-explorer",
+                "ms-vscode.remote-server"
+            ]
+        }
+    },
+
+    "portsAttributes": {
+        "22": {
+            "label": "SSH",
+            "onAutoForward": "notify"
+        }
+    },
+
+    "postCreateCommand": ["sudo service ssh start && tail -f /dev/null"]
+
+}
