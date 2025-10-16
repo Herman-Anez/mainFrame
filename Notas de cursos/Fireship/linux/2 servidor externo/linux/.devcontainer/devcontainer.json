@@ -9,7 +9,8 @@
 		"ghcr.io/devcontainers/features/node:1": {
 			"version": "20"
 		},
-		"ghcr.io/devcontainers/features/sshd:1": {}
+		"ghcr.io/devcontainers/features/sshd:1": {},
+		"ghcr.io/devcontainers-extra/features/tmux-apt-get": {}
 	},
    "portsAttributes": {
         "22": {
@@ -18,6 +19,6 @@
         }
     },
 
-"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv\""
+"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook > /dev/null < /workspace/j/guestbook/nginx.conf\""
 
 }
