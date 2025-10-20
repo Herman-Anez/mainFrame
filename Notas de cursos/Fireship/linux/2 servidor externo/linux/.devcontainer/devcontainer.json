@@ -6,12 +6,17 @@
 	"workspaceFolder": "/workspace",
 	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
 	"features": {
+		//Agrega Node
 		"ghcr.io/devcontainers/features/node:1": {
 			"version": "20"
 		},
+		//Agrega SSH server 
 		"ghcr.io/devcontainers/features/sshd:1": {},
+		// instalamos tmux para poder tener multiples terminales desde una session ssh
 		"ghcr.io/devcontainers-extra/features/tmux-apt-get": {}
 	},
+	   "containerUser": "root",
+    "remoteUser": "root",
    "portsAttributes": {
         "22": {
             "label": "SSH",
@@ -19,6 +24,8 @@
         }
     },
 
-"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook > /dev/null < /workspace/j/guestbook/nginx.conf\""
+"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf && ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/ && rm /etc/nginx/sites-enabled/default && nginx -t && service nginx reload && service nginx start && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install && sudo chmod +x pocketbase\"",
 
+"postStartCommand": "bash -c  \" service nginx start && cd /workspace/j/guestbook/ && tmux new-session -d -s nextjs-server 'npm run dev' && tmux new-session -d -s pocket-server './pocketbase serve'\""
+// 
 }

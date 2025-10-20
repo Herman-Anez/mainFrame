@@ -1,10 +1,10 @@
+nvm install
 
+/// coneccion ssh
 [
-ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh" &&
-scp -P 2222 id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
+ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh/authorized_keys" &&
+scp -P 2222 ~/.ssh/id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
 
-
-scp -P 2222  ~/.ssh/id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
 
 rsync -av -e "ssh -p 2222" --rsync-path="mkdir -p ~/.ssh/authorized_keys && rsync" --chmod=700 /home/herman/.ssh/id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
 
@@ -12,36 +12,40 @@ ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh && echo '$(cat id_ed25519.pub)' > ~
 ]
 
 
-     // systemctl start nginx
+   48  nano /etc/nginx/sites-available/guestbook
+   49  ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/
+   50  rm /etc/nginx/sites-enabled/default
+   51  nginx -t
+   52  systemctl reload nginx
+
+systemctl start nginx
 cd /workspace/j/guestbook
 npm install
 npm run build
 npm start
 
-# Crear una nueva sesión screen
-screen -S nextjs-server
-
-# Iniciar el servidor Next.js dentro de screen
-npm run dev
-# o
-yarn dev
-# o
-pnpm dev
-
-# Para salir de screen SIN detener el servidor: Ctrl+A luego D
-
-# Para volver a la sesión screen:
-screen -r nextjs-server
-
-# Para listar todas las sesiones screen:
-screen -ls
-
-# Para eliminar una sesión screen:
-screen -X -S nextjs-server quit
-
-
 sudo service nginx reload  
 
+///////////////
+TMUX
+# Crear sesión para Next.js
+tmux new-session -s nextjs-server
+
+# Dentro de tmux:
+npm run dev
+
+# Desconectar:
+Ctrl + B, luego D
+
+# Reconectar:
+tmux attach-session -t nextjs-server
+
+# Listar sesiones:
+tmux list-sessions
+
+# Matar sesión:
+tmux kill-session -t nextjs-server
+/////////////////
 
 
 ///////////////
@@ -122,4 +126,35 @@ systemctl enable nextjs
 
 systemctl status pocketbase
 systemctl status nextjs
+
+
+
+
+
+
+
+
+
+
+
+# Crear una nueva sesión screen
+screen -S nextjs-server
+
+# Iniciar el servidor Next.js dentro de screen
+npm run dev
+# o
+yarn dev
+# o
+pnpm dev
+
+# Para salir de screen SIN detener el servidor: Ctrl+A luego D
+
+# Para volver a la sesión screen:
+screen -r nextjs-server
+
+# Para listar todas las sesiones screen:
+screen -ls
+
+# Para eliminar una sesión screen:
+screen -X -S nextjs-server quit
 
