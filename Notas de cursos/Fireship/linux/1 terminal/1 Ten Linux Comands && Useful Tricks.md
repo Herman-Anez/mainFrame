@@ -1,6 +1,4 @@
-# Linux course
-
-## 1) Ten Linux Comands && Useful Tricks
+# 1) Ten Linux Comands && Useful Tricks
 
 Datos extra
  * usa la flag --help para una descripcion rapida
