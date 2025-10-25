@@ -18,3 +18,5 @@ Linux file system diagram:
 * /etc: Contains system-wide configuration files. 6
 * /proc: Contains virtual files that represent system and process information.
 * /home/bob and /home/alice: Home directories for users Bob and Alice.
+
+[anterior](./1-Ten-Linux-Comands-&&-Useful-Tricks.md)/[sigiente](./3-WTF-is-$PATH.md)

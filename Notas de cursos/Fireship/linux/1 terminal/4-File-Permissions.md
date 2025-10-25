@@ -37,4 +37,5 @@ Update file permissions with octal notation:
 chmod 644 somefile.txt
 ```
 
+[anterior](./3-WTF-is-$PATH.md)/[sigiente](./5-Sudo.md)
 
