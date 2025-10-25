@@ -1,0 +1,31 @@
+# Package Managers
+
+How to install packages from source
+Install from Source
+
+Apex-alpha-giga-chad Linux users prefer to install from source:
+
+``` bash
+git clone https://github.com/mtoyoda/sl.git
+cd sl #muestra el tamaño de la lista
+
+make
+./sl
+
+# Move binary to /usr/local/bin
+sudo mv ./sl /usr/local/bin
+```
+
+Install from Compiled Binar
+
+``` bash
+wget https://path-to-some/package.deb
+sudo dpkg -i package.debuestra el tamaño de la lista
+```
+
+Install with Package Manager
+
+``` bash
+sudo apt update
+sudo apt install sl#muestra el tamaño de la lista
+```

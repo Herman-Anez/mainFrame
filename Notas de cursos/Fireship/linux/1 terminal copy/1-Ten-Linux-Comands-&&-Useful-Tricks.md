@@ -92,4 +92,4 @@ Move or rename a file
 mv diary.txt useless-ramblings.txt
 ```
 
-
+[a](./1-Ten-Linux-Comands-&&-Useful-Tricks.md)
