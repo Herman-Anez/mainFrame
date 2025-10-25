@@ -1,0 +1,51 @@
+{
+	"name": "Ubuntu",
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"workspaceFolder": "/workspace",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+	"features": {
+		//Agrega Node
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "20"
+		},
+		//Agrega SSH server 
+		"ghcr.io/devcontainers/features/sshd:1": {},
+		// instalamos tmux para poder tener multiples terminales desde una session ssh
+		"ghcr.io/devcontainers-extra/features/tmux-apt-get": {}
+	},
+   "portsAttributes": {
+        "22": {
+            "label": "SSH",
+            "onAutoForward": "notify"
+        }
+    },
+
+"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install\""
+//"postStartCommand": "bash -c  \" cd /workspace/j/guestbook/ &&  \""
+/* 
+bash -c  \"...."  
+se usa para ejecutar el comando en bash
+
+$sudo useradd -m -s /bin/bash kriv
+se usa para crear un usuario
+
+$sudo echo 'kriv:123' | sudo chpasswd 
+se usa para cambiar el pswrd del usuario
+
+$sudo usermod -aG sudo kriv 
+se usa para cambiar los privilegios del usuario 
+
+$sudo apt update && 
+$sudo apt install nginx -y 
+instalan nginx
+
+$sudo tee /etc/nginx/sites-available/guestbook > /dev/null < /workspace/j/guestbook/nginx.conf
+comando que se usa para poder pasar el archivo de configuracion de ngnx del proyecto a la carpeta necesaria, la sintaxis es necesaria para mantener el permiso sudo 
+Alternativa sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf
+
+$sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm\
+deja que sudo tenga acceso a las librerias de node y npm
+
+
+*/
+}

@@ -15,17 +15,53 @@
 		// instalamos tmux para poder tener multiples terminales desde una session ssh
 		"ghcr.io/devcontainers-extra/features/tmux-apt-get": {}
 	},
-	   "containerUser": "root",
-    "remoteUser": "root",
-   "portsAttributes": {
-        "22": {
-            "label": "SSH",
-            "onAutoForward": "notify"
-        }
-    },
-
-"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf && ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/ && rm /etc/nginx/sites-enabled/default && nginx -t && service nginx reload && service nginx start && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install && sudo chmod +x pocketbase\"",
-
-"postStartCommand": "bash -c  \" service nginx start && cd /workspace/j/guestbook/ && tmux new-session -d -s nextjs-server 'npm run dev' && tmux new-session -d -s pocket-server './pocketbase serve'\""
-// 
-}
+	"containerUser": "root",
+	"remoteUser": "root",
+	"portsAttributes": {
+		"22": {
+			"label": "SSH",
+			"onAutoForward": "notify"
+		}
+	},
+	"postCreateCommand": {
+		"setup-user": [
+			"/bin/bash",
+			"-c",
+			"sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv"
+		],
+		"install-configure-nginx": [
+			"/bin/bash",
+			"-c",
+			"sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/nginx.conf && ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/ && rm /etc/nginx/sites-enabled/default && nginx -t && service nginx reload && service nginx start"
+		],
+		"setup-node-npm-install-deps": [
+			"/bin/bash",
+			"-c",
+			"sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/guestbook && sudo npm install && sudo chmod +x pocketbase"
+		],
+		"configure-pocketbase": [
+			"/bin/bash",
+			"-c",
+			"cd /workspace/guestbook && sudo chmod +x pocketbase"
+		]
+	},
+	"postStartCommand": {
+		"start-nginx": [
+			"/bin/bash",
+			"-c",
+			"service nginx start"
+		],
+		"start-nextjs":[
+			"/bin/bash",
+			"-c",
+			"cd /workspace/guestbook/ && tmux new-session -d -s nextjs-server 'npm run dev'"
+		], 
+		"start-pocket-server": [
+			"/bin/bash",
+			"-c",
+			"cd /workspace/guestbook/ && tmux new-session -d -s pocket-server './pocketbase serve'"
+		],
+		// "bash -c  \" service nginx start && cd /workspace/j/guestbook/ && tmux new-session -d -s nextjs-server 'npm run dev' && tmux new-session -d -s pocket-server './pocketbase serve'\""
+		// //
+	}
+	// "postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/nginx.conf && ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/ && rm /etc/nginx/sites-enabled/default && nginx -t && service nginx reload && service nginx start && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install && sudo chmod +x pocketbase\"",

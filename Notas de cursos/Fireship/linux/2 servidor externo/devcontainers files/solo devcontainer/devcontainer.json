@@ -1,3 +1,5 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
 	"name": "Ubuntu",
 	"image": "mcr.microsoft.com/devcontainers/base:noble",
@@ -13,39 +15,106 @@
 		// instalamos tmux para poder tener multiples terminales desde una session ssh
 		"ghcr.io/devcontainers-extra/features/tmux-apt-get": {}
 	},
-   "portsAttributes": {
-        "22": {
-            "label": "SSH",
-            "onAutoForward": "notify"
-        }
-    },
+	"containerUser": "root",
+	"remoteUser": "root",
+	"portsAttributes": {
+		"22": {
+			"label": "SSH",
+			"onAutoForward": "notify"
+		}
+	},
+	"postCreateCommand": {
+		"setup-user": [
+			"/bin/bash",
+			"-c",
+			"sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv"
+		],
+		"install-configure-nginx": [
+			"/bin/bash",
+			"-c",
+			"sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/nginx.conf && ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/ && rm /etc/nginx/sites-enabled/default && nginx -t && service nginx reload && service nginx start"
+		],
+		"setup-node-npm-install-deps": [
+			"/bin/bash",
+			"-c",
+			"sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/guestbook && sudo npm install && sudo chmod +x pocketbase"
+		],
+		"configure-pocketbase": [
+			"/bin/bash",
+			"-c",
+			"cd /workspace/guestbook && sudo chmod +x pocketbase"
+		]
+	},
+	"postStartCommand": {
+		"start-nginx": [
+			"/bin/bash",
+			"-c",
+			"service nginx start"
+		],
+		"start-nextjs":[
+			"/bin/bash",
+			"-c",
+			"cd /workspace/guestbook/ && tmux new-session -d -s nextjs-server 'npm run dev'"
+		], 
+		"start-pocket-server": [
+			"/bin/bash",
+			"-c",
+			"cd /workspace/guestbook/ && tmux new-session -d -s pocket-server './pocketbase serve'"
+		],
+		// "bash -c  \" service nginx start && cd /workspace/j/guestbook/ && tmux new-session -d -s nextjs-server 'npm run dev' && tmux new-session -d -s pocket-server './pocketbase serve'\""
+		// //
+	}
+	// "postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/nginx.conf && ln -s /etc/nginx/sites-available/guestbook /etc/nginx/sites-enabled/ && rm /etc/nginx/sites-enabled/default && nginx -t && service nginx reload && service nginx start && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install && sudo chmod +x pocketbase\"",
 
-"postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install\""
-//"postStartCommand": "bash -c  \" cd /workspace/j/guestbook/ &&  \""
-/* 
-bash -c  \"...."  
-se usa para ejecutar el comando en bash
 
-$sudo useradd -m -s /bin/bash kriv
-se usa para crear un usuario
+// {
+// 	"name": "Ubuntu",
+// 	"image": "mcr.microsoft.com/devcontainers/base:noble",
+// 	"workspaceFolder": "/workspace",
+// 	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+// 	"features": {
+// 		//Agrega Node
+// 		"ghcr.io/devcontainers/features/node:1": {
+// 			"version": "20"
+// 		},
+// 		//Agrega SSH server 
+// 		"ghcr.io/devcontainers/features/sshd:1": {},
+// 		// instalamos tmux para poder tener multiples terminales desde una session ssh
+// 		"ghcr.io/devcontainers-extra/features/tmux-apt-get": {}
+// 	},
+//    "portsAttributes": {
+//         "22": {
+//             "label": "SSH",
+//             "onAutoForward": "notify"
+//         }
+//     },
 
-$sudo echo 'kriv:123' | sudo chpasswd 
-se usa para cambiar el pswrd del usuario
+// "postCreateCommand": "bash -c  \" sudo useradd -m -s /bin/bash kriv && sudo echo 'kriv:123' | sudo chpasswd && sudo usermod -aG sudo kriv && sudo apt update && sudo apt install nginx -y && sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf && sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm && cd /workspace/j/guestbook && sudo npm install\""
+// //"postStartCommand": "bash -c  \" cd /workspace/j/guestbook/ &&  \""
+// /* 
+// bash -c  \"...."  
+// se usa para ejecutar el comando en bash
 
-$sudo usermod -aG sudo kriv 
-se usa para cambiar los privilegios del usuario 
+// $sudo useradd -m -s /bin/bash kriv
+// se usa para crear un usuario
 
-$sudo apt update && 
-$sudo apt install nginx -y 
-instalan nginx
+// $sudo echo 'kriv:123' | sudo chpasswd 
+// se usa para cambiar el pswrd del usuario
 
-$sudo tee /etc/nginx/sites-available/guestbook > /dev/null < /workspace/j/guestbook/nginx.conf
-comando que se usa para poder pasar el archivo de configuracion de ngnx del proyecto a la carpeta necesaria, la sintaxis es necesaria para mantener el permiso sudo 
-Alternativa sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf
+// $sudo usermod -aG sudo kriv 
+// se usa para cambiar los privilegios del usuario 
 
-$sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm\
-deja que sudo tenga acceso a las librerias de node y npm
+// $sudo apt update && 
+// $sudo apt install nginx -y 
+// instalan nginx
+
+// $sudo tee /etc/nginx/sites-available/guestbook > /dev/null < /workspace/j/guestbook/nginx.conf
+// comando que se usa para poder pasar el archivo de configuracion de ngnx del proyecto a la carpeta necesaria, la sintaxis es necesaria para mantener el permiso sudo 
+// Alternativa sudo tee /etc/nginx/sites-available/guestbook < /workspace/j/guestbook/nginx.conf
+
+// $sudo ln -sf $(which node) /usr/local/bin/node && sudo ln -sf $(which npm) /usr/local/bin/npm\
+// deja que sudo tenga acceso a las librerias de node y npm
 
 
-*/
-}
+// */
+// }
