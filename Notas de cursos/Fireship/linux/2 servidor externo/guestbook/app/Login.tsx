@@ -20,7 +20,7 @@ export default function GitHubLogin() {
   }, []);
 
   const login = async () => {
-    try {
+    try {  
       const authData = await pb.collection('users').authWithOAuth2({
         provider: 'github',
       });

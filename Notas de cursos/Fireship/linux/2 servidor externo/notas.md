@@ -10,8 +10,14 @@ Se registro una clave ssh en vultr
 
 De manera paralela nosotros creamos la llave y la pasamos al contenedor con el siguiente comando
 
-ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh/authorized_keys" &&
+
+ssh kriv@172.17.0.2 -p 2222 "mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys"
 scp -P 2222 ~/.ssh/id_ed25519.pub kriv@172.17.0.2:~/.ssh/authorized_keys
+
+o
+
+ssh-copy-id -i ~/.ssh/id_ed25519.pub -p 2222 kriv@172.17.0.2
+
 
 para esto necesitamos nuestro entorno preparado
 
