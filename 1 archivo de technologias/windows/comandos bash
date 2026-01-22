@@ -1,0 +1,2 @@
+for /L %i in (2,1,10) do mkdir ep-%i
+comando de cmd para crear carpetas

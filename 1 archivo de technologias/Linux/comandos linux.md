@@ -108,3 +108,13 @@ get the full path of the file
 realpath hello.sh 
 
 ```
+
+## realpath
+
+show ip config
+
+``` bash
+ip a
+
+```
+
