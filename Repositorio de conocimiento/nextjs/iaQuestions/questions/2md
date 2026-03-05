@@ -1,0 +1,88 @@
+Diferentes tipos de rutas dinamicas
+
+"blog/[id].tsx" "blog/[...id].tsx" "blog/[[...id]].tsx"
+
+| Archivo     | ¿Permite `/blog`? | Tipo de `id`         |
+| ----------- | ----------------- | -------------------- |
+| `[id]`      | ❌ No              | string               |
+| `[...id]`   | ❌ No              | string[]             |
+| `[[...id]]` | ✅ Sí              | string[] | undefined |
+
+
+# blog/[id].tsx → Ruta dinámica simple
+
+Captura un solo segmento.
+
+Estructura:
+``pages/blog/[id].tsx``
+
+Coincide con:
+`/blog/1`
+`/blog/hola`
+`/blog/abc`
+
+NO coincide con:
+`/blog`
+`/blog/2024/05`
+
+En el código:
+```tsx
+import { useRouter } from 'next/router'
+
+export default function Blog() {
+  const router = useRouter()
+  const { id } = router.query
+
+  return <div>{id}</div>
+}
+```
+
+👉 id será un string:`/blog/123  → id = "123"`
+
+
+## blog/[...id].tsx → Catch-all (obligatorio)
+
+Captura uno o más segmentos.
+
+Estructura:
+`pages/blog/[...id].tsx`
+
+Coincide con:
+`/blog/a`
+`/blog/a/b`
+`/blog/a/b/c`
+
+NO coincide con:
+`/blog`
+
+En el código:
+```tsx
+const { id } = router.query
+→ id = ["2024", "05", "post"]
+/blog/2024/05/post
+```
+👉 id será un array de strings
+
+
+## blog/[[...id]].tsx → Catch-all opcional
+
+Es igual al anterior, pero también permite la ruta base.
+
+Estructura: `pages/blog/[[...id]].tsx`
+
+Coincide con:
+`/blog`
+`/blog/a`
+`/blog/a/b`
+`/blog/a/b/c`
+
+En el código:
+
+```tsx
+const { id } = router.query
+→ id = undefined
+/blog
+
+→ id = ["2024", "05"]
+/blog/2024/05
+```
