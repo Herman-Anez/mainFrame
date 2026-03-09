@@ -1,9 +1,10 @@
 # Server-side Rendering
 
-To use Server-side Rendering, you need to export getServerSideProps instead of getStaticProps from your page.
-Using getServerSideProps
+To use Server-side Rendering, you need to export `getServerSideProps` instead of `getStaticProps` from your page.
 
-Here’s the starter code for getServerSideProps. It’s not necessary for our blog example, so we won’t be implementing it.
+Using `getServerSideProps`
+
+Here’s the starter code for `getServerSideProps`. It’s not necessary for our blog example, so we won’t be implementing it.
 
 ```ts
 export async function getServerSideProps(context) {

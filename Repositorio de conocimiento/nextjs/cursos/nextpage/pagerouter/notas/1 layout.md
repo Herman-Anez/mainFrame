@@ -1,12 +1,13 @@
+# Layout
 
-## Layout
+- [back](../pagerouter.md)
 
 en este tutorial se crea un layout como componente y se reusa en las paginas
 
 Tambien pasamos variables para modificar su comportamiento 
 
 ```css
- /* components/layout.module.css*/
+ /* components/layout.module.css*/b
 .container {
   max-width: 36rem;
   padding: 0 1rem;
@@ -43,5 +44,3 @@ export default function Home() {
 NOTA
 
 Los archivos css se deben crear con la extencion module.css
-
-- [back](../pagerouter.md)

@@ -1,4 +1,5 @@
 # Pre Rendering
+  - [back](../pagerouter.md)
 
 By default, Next.js pre-renders every page. This means that Next.js generates HTML for each page in advance, instead of having it all done by client-side JavaScript. Pre-rendering can result in better performance and SEO
 .
@@ -87,5 +88,3 @@ export default function Home({ allPostsData }) {
 Nota 
 
 la funcion getStaticProps solo corre en el servidor y por eso puede usar imports a librerias de node
-
-- [back](../pagerouter.md)

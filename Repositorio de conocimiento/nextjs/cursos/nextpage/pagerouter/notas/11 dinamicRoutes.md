@@ -1,14 +1,15 @@
-
 # Rutas dinamicas
 
-Page Path Depends on External Data
+- [back](../pagerouter.md)
+
+## Page Path Depends on External Data
 
 con el ejemplo pages/posts/[id].js teme,ps una ruta que depende del id del post a ver
 
 para esto se usa la funcion especial getStaticPaths
 
 ```js
-//lib/posts.js
+//lib/posts.js Extrae los id de cada post
 export function getAllPostIds() {
   const fileNames = fs.readdirSync(postsDirectory);
   return fileNames.map((fileName) => {
@@ -20,6 +21,7 @@ export function getAllPostIds() {
   });
 }
 
+/// Extrea kis datos de cada post
 export function getPostData(id) {
   const fullPath = path.join(postsDirectory, `${id}.md`);
   const fileContents = fs.readFileSync(fullPath, 'utf8');
@@ -34,7 +36,8 @@ export function getPostData(id) {
   };
 }
 ```
-Important: The returned list is not just an array of strings — it must be an array of objects. Each object must have the params key and contain an object with the id key (because we’re using [id] in the file name). Otherwise, getStaticPaths will fail.
+
+Important: The returned list is not just an array of strings — it must be an array of objects. Each object must have the params key and contain an object with the id key (because we’re using `[id]` in the file name). Otherwise, getStaticPaths will fail.
 
 ```jsx
 //pages/posts/[id].js
@@ -49,6 +52,7 @@ export async function getStaticProps({ params }) {
   };
 }
 
+//Genera un path por cada id de post
 export async function getStaticPaths() {
   const paths = getAllPostIds();
   return {

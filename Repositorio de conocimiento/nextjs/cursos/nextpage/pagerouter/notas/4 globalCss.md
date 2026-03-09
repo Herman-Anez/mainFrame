@@ -1,5 +1,5 @@
-
 # global css
+- [back](../pagerouter.md)
 
 Se agregan al archivo `pages/_app.js`
 
@@ -29,4 +29,3 @@ export default function App({ Component, pageProps }) {
 }
 
 ```
-- [back](../pagerouter.md)

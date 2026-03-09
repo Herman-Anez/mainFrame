@@ -1,4 +1,4 @@
-# pageRouter 
+# pageRouter
 
 In Next.js, a page is a React Component exported from a file in the pages directory.
 Pages are associated with a route based on their file name. For example, in development:
@@ -7,35 +7,35 @@ Pages are associated with a route based on their file name. For example, in deve
 * `pages/posts/first-post.js` is associated with the /posts/first-post route.
 
 NOTA
-```
 
+```bash
 pages/
 ├── ejemplo.js
 ├── index.js
 └── ejemplo/
     └── index.js
 ```
+
 en este ejemplo ejemplo/index.js sobre escribe a ejemplo.js
 
----
+* [layout](./notas/1%20layout.md)
+* [assets](./notas/2%20assets.md)
+* [metadata](./notas/3%20metadata.md)
+* [globalCss](./notas/4%20globalCss.md)
+* [clsx](./notas/5%20clsx.md)
+* [Customizing PostCSS Config](./notas/6%20Customizing%20PostCSS%20Config.md)
+* [preRendering](./notas/7%20Pre-rendering.md)
+* [Static Generation with and without Data](./notas/8%20Static%20Generation%20with%20and%20without%20Data.md)
+* [getStaticProps](./notas/9%20getStaticProps.md)
+* [fetchingDataAtRequest](./notas/10%20fetchingDataAtRequest.md)
+* [fetchingDataAtRequest](./notas/)
+* [fetchingDataAtRequest](./notas/)
+* [dinamicRoutes](./notas/)
+* [Catch-all 20Routes](./notas/)
+* [apiRutes](./notas/)
+* [apiRutes2](./notas/)
+* [previewMode](./notas/)
 
-
-- [Special Files](./specialFiles.MD)
-- [special functions](./specialFunctions.md)
-
-
-
-
-
-
-
-
-
-
-
-
-
---- 
 ## Componentes especiales
 
 Se usa el componente `<Head> `
@@ -105,19 +105,5 @@ export default function FirstPost() {
 }
 ```
 
-
 * strategy controls when the third-party script should load. A value of lazyOnload tells Next.js to load this particular script lazily during browser idle time
 * onLoad is used to run any JavaScript code immediately after the script has finished loading. In this example, we log a message to the console that mentions that the script has loaded correctly
-
-
-
-
-
-### Catch-all Routes
-
-Dynamic routes can be extended to catch all paths by adding three dots (...) inside the brackets. For example:
-
-`pages/posts/[...id].js` matches `/posts/a`, but also `/posts/a/b`, `/posts/a/b/c` and so on.
-
-If you do this, in getStaticPaths, you must return an array as the value of the id key like so:
-
