@@ -18,23 +18,24 @@ pages/
 
 en este ejemplo ejemplo/index.js sobre escribe a ejemplo.js
 
-* [layout](./notas/1%20layout.md)
-* [assets](./notas/2%20assets.md)
-* [metadata](./notas/3%20metadata.md)
-* [globalCss](./notas/4%20globalCss.md)
-* [clsx](./notas/5%20clsx.md)
-* [Customizing PostCSS Config](./notas/6%20Customizing%20PostCSS%20Config.md)
-* [preRendering](./notas/7%20Pre-rendering.md)
-* [Static Generation with and without Data](./notas/8%20Static%20Generation%20with%20and%20without%20Data.md)
-* [getStaticProps](./notas/9%20getStaticProps.md)
-* [fetchingDataAtRequest](./notas/10%20fetchingDataAtRequest.md)
-* [fetchingDataAtRequest](./notas/)
-* [fetchingDataAtRequest](./notas/)
-* [dinamicRoutes](./notas/)
-* [Catch-all 20Routes](./notas/)
-* [apiRutes](./notas/)
-* [apiRutes2](./notas/)
-* [previewMode](./notas/)
+1 [layout](./notas/1%20layout.md)
+2 [assets](./notas/2%20assets.md)
+3 [metadata](./notas/3%20metadata.md)
+4 [globalCss](./notas/4%20globalCss.md)
+5 [clsx](./notas/5%20clsx.md)
+6 [Customizing PostCSS Config](./notas/6%20Customizing%20PostCSS%20Config.md)
+7 [preRendering](./notas/7%20Pre-rendering.md)
+8 [Static Generation with and without Data](./notas/8%20Static%20Generation%20with%20and%20without%20Data.md)
+9 [getStaticProps](./notas/9%20getStaticProps.md)
+11 [fetchingDataAtRequest](./notas/10%20fetchingDataAtRequest.md)
+12 [fetchingDataAtRequest](./notas/)
+13 [fetchingDataAtRequest](./notas/)
+14 [dinamicRoutes](./notas/)
+15 [Catch-all 20Routes](./notas/)
+16 [apiRutes](./notas/)
+17 [apiRutes2](./notas/)
+18 [previewMode](./notas/)
+
 
 ## Componentes especiales
 
