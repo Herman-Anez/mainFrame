@@ -1,2 +1,2 @@
 
-[Cursos](./cursos/index.md)
+[Cursos](./cursos/cursos.md)
