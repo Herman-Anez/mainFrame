@@ -36,10 +36,9 @@ en este ejemplo ejemplo/index.js sobre escribe a ejemplo.js
 17 [apiRutes2](./notas/)
 18 [previewMode](./notas/)
 
-
 ## Componentes especiales
 
-Se usa el componente `<Head> `
+Se usa el componente `<Head>`
 
 ### Link
 
@@ -68,18 +67,6 @@ const YourComponent = () => (
     alt="Your Name"
   />
 );
-```
-
-### Image
-
-next/image is an extension of the HTML `<img>`element, evolved for the modern web.
-
-```js
-import Head from 'next/head';
-<Head>
-  <title>Create Next App</title>
-  <link rel="icon" href="/favicon.ico" />
-</Head>
 ```
 
 ### Scrip
