@@ -11,3 +11,13 @@
 * [Elemento](#idDeElemento)
 * [Elemento](#idDeElemento)
 
+tanque para trasportar amoniaco (sin el camion)
+
+Tiempo de fabricacion
+Precio
+Capacidad
+
+cotizacion de 1
+
+servicar compra
+servicio a pekiven

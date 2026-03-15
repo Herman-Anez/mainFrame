@@ -1,5 +1,5 @@
 # Table of Contents
-1. [Introduccion](#Introduccion)
+1. [Introduccion](#Codigo)
 2. [Codigo](#Codigo)
 3. [Third Example](#third-example)
 
@@ -46,7 +46,7 @@
 3. Item C
                 
 
-# Codigo 
+## Codigo 
 
 ```javascript
    ///js code
@@ -81,3 +81,5 @@ Tabla
 | Element         | Element            |
 | Element         | Element            |
 | Element         | Element            |
+
+
