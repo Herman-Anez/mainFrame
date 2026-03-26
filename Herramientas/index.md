@@ -10,7 +10,8 @@ https://www.realtimecolors.com/?colors=e4e5e7-07080a-b0bccd-364b69-6a8dc0&fonts=
 
 ## Creacion de base de datos
 
-https://www.mockaroo.com/ generra datos falsos
+generra datos falsos
+https://www.mockaroo.com/
 
 drawdb-io  https://github.com/drawdb-io/drawdb?tab=readme-ov-file
 

@@ -1,0 +1,42 @@
+
+Table lenguajes {
+	id bigint [ pk, increment, not null, unique ]
+	nombre varchar [ not null ]
+}
+Table productoras {
+	id bigint [ pk, increment, not null, unique ]
+	nombre varchar [ not null ]
+}
+Table series {
+	id bigint [ pk, increment, not null, unique ]
+	nombre varchar [ not null ]
+	temporadas integer
+  episodios integer
+	especiales integer
+	lenguaje_original_id integer [ not null ]
+  productora_id integer [ not null ]
+}
+
+
+Records lenguajes(id, nombre) {
+  0,"ingles"
+  1,"español"
+	2,"japones"
+	3,"latino"
+}
+Records productoras(id, nombre) {
+  0,"AdultSwing"
+  1,"CartonNetwork"
+	2,"Netflix"
+	3,"Nick"
+	4,"Disney"
+
+}
+Records series(id, nombre, productora_id, lenguaje_original_id) {
+  0, "adventureTime",0,0
+
+}
+
+Ref: "productoras"."id" < "series"."productora_id"
+
+Ref: "lenguajes"."id" < "series"."lenguaje_original_id"

@@ -1,0 +1,24 @@
+{
+	"name": "Node.js & TypeScript",
+	"dockerComposeFile": [
+		"docker-compose.yml"
+	],
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	"features": {
+		"ghcr.io/duduribeiro/devcontainer-features/tmux:1": {}
+	},
+	// "mounts": [
+	// 	"source=nextPlayGround,target=/var/lib/postgresql/data,type=volume"
+	// ],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"cweijan.vscode-postgresql-client2",
+				"oderwat.indent-rainbow",
+				"burkeholland.simple-react-snippets",
+				"eamodio.gitlens"
+			]
+		}
+	}
+}

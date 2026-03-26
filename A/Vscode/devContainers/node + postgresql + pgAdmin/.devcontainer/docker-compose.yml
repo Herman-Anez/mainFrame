@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  app:
+    container_name: node_back
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
+    tty: true
+    stdin_open: true
+    working_dir: /workspace
+    volumes:
+      - ../:/workspace
+    depends_on:
+      - db
+    command: tail -f /dev/null # Mantener el contenedor corriendo para desarrollo
+  db:
+    container_name: next_db_V2
+    image: postgres:18
+    restart: always
+    environment:
+      # POSTGRES_DB: "next_db"
+      # POSTGRES_HOST_AUTH_METHOD: "trust"
+      # PGDATA: /var/lib/postgresql/18/docker
+
+      # POSTGRES_DB: "next_db"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    # volumes:
+    #   - nextPlayGround:/var/lib/postgresql/data 
+    #   - ./data/nextdb/postgres/:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  pgadmin:
+    image: dpage/pgadmin4:9.8
+    ports:
+      - 5050:80
+    environment:
+      # Required by pgAdmin
+      PGADMIN_DEFAULT_EMAIL: demo@example.com
+      PGADMIN_DEFAULT_PASSWORD: secret
+
+      # Don't require the user to login
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+
+      # Don't require a "master" password after logging in
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+# volumes:
+#   nextPlayGround:
