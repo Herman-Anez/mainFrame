@@ -1,5 +1,0 @@
-
-indent-rainbow
-tabstronaut
-markdown-preview-enhanced
-        
