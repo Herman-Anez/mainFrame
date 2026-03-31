@@ -21,5 +21,10 @@ Developer: Toggle Developer Tools
     //
     "tree.indentGuidesStroke": "#2382238a",
     "tree.inactiveIndentGuidesStroke": "#778f18",
+ ,  //
+    "tab.activeBackground": "#18228f",
+    //
+    "editor.minimap.enabled": false,
+    "editor.wordWrap": "on"
 },
 ```
