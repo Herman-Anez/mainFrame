@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  log4brains:
+    image: thomvaill/log4brains
+    volumes:
+      - .:/workdir
+    ports:
+      - "4004:4004"
+    tty: true
+    stdin_open: true
+    command: help
