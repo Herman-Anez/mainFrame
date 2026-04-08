@@ -118,3 +118,4 @@ ip a
 
 ```
 
+tree -d /proc/self/
