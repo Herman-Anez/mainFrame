@@ -27,4 +27,14 @@ Developer: Toggle Developer Tools
     "editor.minimap.enabled": false,
     "editor.wordWrap": "on"
 },
+
+"editor.tokenColorCustomizations": {
+"textMateRules": [
+    {
+        "scope": "punctuation.definition.table.markdown", // You can try targeting the class directly
+        "settings": {
+            "foreground": "#FF0000"
+        }
+    }
+]
 ```
