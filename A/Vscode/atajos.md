@@ -11,4 +11,8 @@ Ctrl + alt + z extencions
   "key": "alt+w alt+w",
   "command": "editor.action.toggleRenderWhitespace"
 }
+{
+  "key": "ctrl+m ctrl+m",
+  "command": "markdownlint.fixAll"
+}
 ´´´
