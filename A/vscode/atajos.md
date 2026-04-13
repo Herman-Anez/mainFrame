@@ -15,4 +15,8 @@ Ctrl + alt + z extencions
   "key": "ctrl+m ctrl+m",
   "command": "markdownlint.fixAll"
 }
+{
+  "key": "ctrl+m ctrl+l",
+  "command": "markdown.showLockedPreviewToSide"
+}
 ´´´
