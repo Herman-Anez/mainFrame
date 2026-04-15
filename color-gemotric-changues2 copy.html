@@ -7,7 +7,9 @@
     <title>Círculo Cromático + Juego de la Vida</title>
     <style>
         /* =========================================
-           1. VARIABLES CSS (TEMAS)
+           1. VARIABLES CSS (TEMAS DINÁMICOS)
+           Ahora estas variables no solo cambian por clase,
+           sino que las inyectaremos desde Javascript.
            ========================================= */
         :root {
             --bg-color: #f0f2f5;
@@ -50,7 +52,7 @@
             align-items: flex-start;
             background: var(--bg-color);
             color: var(--text-color);
-            transition: background 0.6s ease, color 0.6s ease;
+            transition: background 0.8s ease, color 0.8s ease; /* Transición más lenta para efecto inmersivo */
             margin: 0;
             padding: 40px 20px;
             min-height: 100vh;
@@ -59,7 +61,7 @@
             flex-wrap: wrap;
         }
 
-        /* Botones superiores */
+        /* Contenedor para los botones superiores */
         .top-bar {
             position: absolute;
             top: 20px;
@@ -71,22 +73,31 @@
 
         .top-btn {
             padding: 8px 15px;
-            font-size: 14px;
             border-radius: 20px;
             border: 1px solid var(--input-border);
             background: var(--panel-bg);
             color: var(--text-color);
             cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px var(--shadow-color);
-            font-weight: bold;
         }
 
-        .top-btn:hover { background: var(--btn-hover); filter: brightness(1.1); }
-        
-        #applyThemeBtn { background: var(--accent-color); color: white; border: none;}
+        .top-btn:hover {
+            background: var(--btn-hover);
+        }
 
-        /* Contenedores de Canvas */
+        #applyThemeBtn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+        }
+        #applyThemeBtn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Contenedor Izquierdo: Ambos Lienzos */
         .canvas-section {
             display: flex;
             flex-direction: column;
@@ -103,11 +114,14 @@
             max-width: 100%;
             height: auto;
             aspect-ratio: 1 / 1;
-            transition: background 0.6s ease;
+            transition: background 0.8s ease;
         }
 
-        #wheel { border-radius: 50%; }
+        #wheel { 
+            border-radius: 50%; 
+        }
 
+        /* Controles específicos del Juego de la Vida */
         .game-btn-group {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -116,9 +130,13 @@
             width: 100%;
         }
 
-        .game-btn-group button { font-size: 13px; padding: 8px 4px; white-space: nowrap; }
+        .game-btn-group button {
+            font-size: 13px;
+            padding: 8px 4px;
+            white-space: nowrap;
+        }
 
-        /* Controles Derecho */
+        /* Contenedor Derecho: Panel de Color */
         .controls {
             background: var(--panel-bg);
             padding: 20px;
@@ -130,80 +148,119 @@
             gap: 15px;
             max-width: 100%;
             box-sizing: border-box;
-            transition: background 0.6s ease, box-shadow 0.6s ease;
+            transition: background 0.8s ease;
         }
 
-        .modes-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .active { background: var(--text-color) !important; color: var(--panel-bg) !important; }
-        
-        .node-item { display: grid; grid-template-columns: 40px 40px 1fr auto; align-items: center; gap: 8px; }
-        
-        input[type="color"] {
-            width: 100%; height: 35px; cursor: pointer; border-radius: 4px; border: 1px solid var(--input-border); padding: 0;
-            -webkit-appearance: none; overflow: hidden; box-sizing: border-box;
+        .modes-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
+
+        .active { 
+            background: var(--text-color) !important; 
+            color: var(--panel-bg) !important; 
+        }
+
+        .node-item {
+            display: grid;
+            grid-template-columns: 40px 40px 1fr auto;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="color"] {
+            width: 100%; 
+            height: 35px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            border: 1px solid var(--input-border); 
+            padding: 0;
+            -webkit-appearance: none; 
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        
         input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
         input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
 
         input[type="text"], input[type="range"] { box-sizing: border-box; }
+        
         input[type="text"] {
-            width: 100%; padding: 8px; font-family: monospace; border: 1px solid var(--input-border); border-radius: 4px;
-            background: var(--input-bg); color: var(--text-color); transition: background 0.6s ease, color 0.6s ease;
+            width: 100%; 
+            padding: 8px; 
+            font-family: monospace; 
+            border: 1px solid var(--input-border); 
+            border-radius: 4px;
+            background: var(--input-bg); 
+            color: var(--text-color); 
+            transition: background 0.8s ease, color 0.8s ease;
         }
 
         button {
-            padding: 10px; cursor: pointer; border-radius: 4px; border: 1px solid var(--input-border);
-            background: var(--btn-bg); color: var(--btn-text); transition: background 0.3s ease; font-weight: bold;
+            padding: 10px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            border: 1px solid var(--input-border);
+            background: var(--btn-bg); 
+            color: var(--btn-text); 
+            transition: 0.2s; 
+            font-weight: bold;
         }
-        button:hover { background: var(--btn-hover); filter: brightness(0.9); }
 
-        #exportBtn { background: var(--accent-color); color: white; border: none; width: 100%; transition: background 0.6s ease;}
+        button:hover { background: var(--btn-hover); }
+
+        #exportBtn { background: var(--accent-color); color: white; border: none; width: 100%; transition: background 0.8s ease;}
         #exportBtn:hover { filter: brightness(1.1); }
 
-        #palettePreview { display: flex; gap: 5px; margin-top: 10px; border-radius: 4px; overflow: hidden; flex-wrap: wrap; }
-        .color-column { flex: 1; display: flex; flex-direction: column; min-width: 60px; }
-        .color-swatch { height: 30px; font-size: 10px; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 0 1px 2px black; cursor: pointer; }
-
-        /* Estilos del Modal */
-        #cssMapModal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
-            z-index: 1000; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        #palettePreview { 
+            display: flex; 
+            gap: 5px; 
+            margin-top: 10px; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            flex-wrap: wrap; 
         }
-        #cssMapModal.visible { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: var(--panel-bg); color: var(--text-color); padding: 30px; border-radius: 12px;
-            width: 800px; max-width: 95vw; max-height: 90vh; overflow-y: auto; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; gap: 30px;
-        }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color); padding: 0; line-height: 1; }
-        .map-controls { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-        .map-var-btn { background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px; text-align: left; border-radius: 6px; cursor: pointer; font-family: monospace; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .map-var-btn:hover { border-color: var(--accent-color); transform: translateX(5px); }
-        .map-wireframe { flex: 1.5; background: var(--bg-color); border: 2px dashed var(--input-border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; position: relative; transition: background 0.3s ease; }
-        .wf-element { transition: all 0.3s ease; position: relative; }
         
-        .highlight-bg { box-shadow: inset 0 0 0 4px #ff0055, 0 0 20px rgba(255,0,85,0.4); }
-        .highlight-panel { box-shadow: inset 0 0 0 4px #00aaff, 0 0 20px rgba(0,170,255,0.4); }
-        .highlight-text { text-shadow: 0 0 5px #00ffaa, 0 0 10px #00ffaa; color: #00ffaa !important; }
-        .highlight-inputBg { box-shadow: inset 0 0 0 4px #ffaa00, 0 0 20px rgba(255,170,0,0.4); }
-        .highlight-border { box-shadow: 0 0 0 4px #aa00ff, 0 0 20px rgba(170,0,255,0.4); }
-        .highlight-btnBg { box-shadow: inset 0 0 0 4px #00ff55, 0 0 20px rgba(0,255,85,0.4); }
-        .highlight-btnText { text-shadow: 0 0 5px #ff00aa, 0 0 10px #ff00aa; color: #ff00aa !important; }
-        .highlight-accent { box-shadow: inset 0 0 0 4px #ffff00, 0 0 20px rgba(255,255,0,0.4); }
-        .highlight-grid { box-shadow: inset 0 0 0 4px #00ffff, 0 0 20px rgba(0,255,255,0.4); }
+        .color-column { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 60px; 
+        }
+        
+        .color-swatch { 
+            height: 30px; 
+            font-size: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            text-shadow: 0 1px 2px black; 
+            cursor: pointer; 
+        }
 
-        .wf-panel { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--input-border); display: flex; flex-direction: column; gap: 10px; }
-        .wf-input { background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px; border-radius: 4px; color: var(--text-color); }
-        .wf-btn { background: var(--btn-bg); color: var(--btn-text); border: 1px solid var(--input-border); padding: 8px; border-radius: 4px; text-align: center; }
-        .wf-accent { background: var(--accent-color); color: white; border: none; padding: 8px; border-radius: 4px; text-align: center; }
-        .wf-canvas { background: var(--grid-bg); height: 100px; border-radius: 4px; border: 1px solid var(--input-border); }
-
-        @media (max-width: 850px) { body { padding-top: 80px; } .modal-content { flex-direction: column; } }
+        /* Ajustes para móviles */
+        @media (max-width: 850px) { 
+            body { 
+                padding-top: 70px; 
+            }
+            .canvas-section {
+                max-width: 100%;
+            }
+        }
+        
         @media (max-width: 450px) {
-            .node-item { grid-template-columns: 35px 35px 1fr; }
-            .node-item button { grid-column: 1 / -1; }
-            .top-bar { flex-direction: column; align-items: flex-end;}
+            .node-item { 
+                grid-template-columns: 35px 35px 1fr;
+            }
+            .node-item button {
+                grid-column: 1 / -1; 
+            }
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-end;
+            }
         }
     </style>
 </head>
@@ -211,44 +268,14 @@
 <body>
 
     <div class="top-bar">
-        <button onclick="openMapModal()" class="top-btn">🗺️ Ver Mapa CSS</button>
-        <button id="applyThemeBtn" class="top-btn" onclick="applyDynamicTheme()">🎨 Inyectar Paleta</button>
+        <button id="applyThemeBtn" class="top-btn" onclick="applyDynamicTheme()">🎨 Aplicar Tema</button>
         <button id="themeToggle" class="top-btn">🌙 Base Oscura</button>
     </div>
 
-    <div id="cssMapModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeMapModal()">×</button>
-            <div class="map-controls">
-                <h3 style="margin-top:0;">Variables CSS</h3>
-                <p style="font-size: 13px; opacity: 0.8; margin-top:-10px;">Pasa el ratón sobre una variable para ver qué ilumina.</p>
-                <button class="map-var-btn" onmouseover="highlight('bg')" onmouseout="unhighlight('bg')">--bg-color <span>🔲 Fondo</span></button>
-                <button class="map-var-btn" onmouseover="highlight('panel')" onmouseout="unhighlight('panel')">--panel-bg <span>📦 Paneles</span></button>
-                <button class="map-var-btn" onmouseover="highlight('text')" onmouseout="unhighlight('text')">--text-color <span>📝 Textos</span></button>
-                <button class="map-var-btn" onmouseover="highlight('inputBg')" onmouseout="unhighlight('inputBg')">--input-bg <span>⌨️ Cajas texto</span></button>
-                <button class="map-var-btn" onmouseover="highlight('border')" onmouseout="unhighlight('border')">--input-border <span>📏 Bordes</span></button>
-                <button class="map-var-btn" onmouseover="highlight('btnBg')" onmouseout="unhighlight('btnBg')">--btn-bg <span>🔘 Botones</span></button>
-                <button class="map-var-btn" onmouseover="highlight('btnText')" onmouseout="unhighlight('btnText')">--btn-text <span>💬 Texto botón</span></button>
-                <button class="map-var-btn" onmouseover="highlight('accent')" onmouseout="unhighlight('accent')">--accent-color <span>✨ Destacado</span></button>
-                <button class="map-var-btn" onmouseover="highlight('grid')" onmouseout="unhighlight('grid')">--grid-bg <span>👾 Fondo Juego</span></button>
-            </div>
-            <div class="map-wireframe wf-element" data-target="bg">
-                <div class="wf-panel wf-element" data-target="panel border">
-                    <strong class="wf-element" data-target="text">Panel Principal</strong>
-                    <div class="wf-canvas wf-element" data-target="grid border"></div>
-                    <div class="wf-input wf-element" data-target="inputBg border text">Caja de entrada</div>
-                    <div style="display: flex; gap:10px;">
-                        <div style="flex:1" class="wf-btn wf-element" data-target="btnBg border btnText">Botón</div>
-                        <div style="flex:1" class="wf-btn wf-element" data-target="btnBg border btnText">Botón</div>
-                    </div>
-                    <div class="wf-accent wf-element" data-target="accent">Botón Acción Principal</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="canvas-section">
+        
         <canvas id="wheel" width="350" height="350"></canvas>
+        
         <div style="text-align: center; width: 100%;">
             <strong style="display: block; margin-bottom: 10px; font-size: 18px;">👾 Autómata Celular</strong>
             <canvas id="gameCanvas" width="350" height="350" style="cursor: crosshair;"></canvas>
@@ -259,6 +286,7 @@
             </div>
             <p style="font-size: 12px; margin-top: 10px; opacity: 0.7;">Pinta sobre el cuadro para añadir células</p>
         </div>
+
     </div>
 
     <div class="controls">
@@ -286,130 +314,74 @@
     </div>
 
     <script>
-        const modal = document.getElementById('cssMapModal');
-        function openMapModal() { modal.classList.add('visible'); }
-        function closeMapModal() { modal.classList.remove('visible'); }
-        modal.addEventListener('click', (e) => { if(e.target === modal) closeMapModal(); });
-
-        function highlight(targetVar) {
-            document.querySelectorAll(`.wf-element`).forEach(el => {
-                if(el.dataset.target && el.dataset.target.includes(targetVar)) {
-                    el.classList.add(`highlight-${targetVar}`);
-                } else {
-                    el.style.opacity = '0.3';
-                }
-            });
-        }
-
-        function unhighlight(targetVar) {
-            document.querySelectorAll(`.wf-element`).forEach(el => {
-                el.classList.remove(`highlight-${targetVar}`);
-                el.style.opacity = '1';
-            });
-        }
-
+        /* =========================================================
+           1. LÓGICA DE TEMA (CLARO/OSCURO Y DINÁMICO)
+           ========================================================= */
         const themeToggleBtn = document.getElementById('themeToggle');
         
+        // Base Oscura / Clara
         themeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             themeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️ Base Clara' : '🌙 Base Oscura';
+            
+            // Si el usuario cambia la base, borramos el tema dinámico inyectado en el style para que funcionen las clases CSS
             document.documentElement.style.cssText = ''; 
             drawGame(); 
         });
 
-        // =========================================================================
-        // UTILIDADES DE LUZ (Para decidir si el texto debe ser blanco o negro)
-        // =========================================================================
-        function getLuminance(h, s, l) {
-            // Conversión rápida de HSL a "luminancia relativa" percibida por el ojo humano
-            // No es perfecta al 100% pero es un estándar muy bueno para UI
-            let rgb = hslToHex(h, s, l);
-            let r = parseInt(rgb.slice(1, 3), 16) / 255;
-            let g = parseInt(rgb.slice(3, 5), 16) / 255;
-            let b = parseInt(rgb.slice(5, 7), 16) / 255;
-            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        }
-
-        function getTextColorForBackground(h, s, l) {
-            const lum = getLuminance(h, s, l);
-            // Si el color es claro (luminancia > 0.5), devolvemos texto muy oscuro. Si no, blanco.
-            return lum > 0.5 ? '#1a1a1a' : '#ffffff';
-        }
-
-        // =========================================================================
-        // NUEVA FUNCIÓN: INYECTAR PALETA BASADA EN MÚLTIPLES NODOS
-        // =========================================================================
+        // Tema Dinámico basado en Nodos
         function applyDynamicTheme() {
+            // Tomamos el primer nodo (el color dominante)
+            const mainNode = nodes[0];
             const offset = parseInt(globalRotInput.value);
+            const currentHue = (mainNode.baseAngle + offset) % 360;
             
-            // Extraemos los nodos principales asegurando que siempre haya datos aunque el usuario los borre
-            const node1 = nodes[0] || { baseAngle: 0, s: 0, l: 1 };
-            const node2 = nodes[1] || node1; // Si no hay nodo 2, repite el 1
-            const node3 = nodes[2] || node2; // Si no hay nodo 3, repite el 2
-            
-            // Calculamos los ángulos reales con la rotación
-            const hue1 = (node1.baseAngle + offset) % 360;
-            const hue2 = (node2.baseAngle + offset) % 360;
-            const hue3 = (node3.baseAngle + offset) % 360;
-
-            // Variables que inyectaremos
-            let bgColorHex, panelBgHex, inputBgHex, borderHex, btnBgHex, accentHex, gridBgHex;
-            let mainTextHex, btnTextHex;
-
-            // 1. EL FONDO (NODO 1 - Ajustado para no quemar los ojos)
-            // Le bajamos la saturación al 30% y forzamos mucha luz o mucha oscuridad
+            // Evaluamos si el body actual es oscuro o claro para decidir cómo calcular los fondos
             const isDark = document.body.classList.contains('dark-mode');
+
+            let bgColorHex, panelBgHex, inputBgHex, textColor, borderHex, btnBgHex, btnHoverHex;
+
             if (isDark) {
-                bgColorHex = hslToHex(hue1, node1.s * 0.3, 0.08); // Muy oscuro
+                // En modo oscuro, usamos tonos muy oscuros (baja luminosidad) del color principal
+                bgColorHex = hslToHex(currentHue, mainNode.s * 0.5, 0.05); // Muy oscuro, un poco desaturado
+                panelBgHex = hslToHex(currentHue, mainNode.s * 0.6, 0.12); // Un poco menos oscuro para que resalte
+                inputBgHex = hslToHex(currentHue, mainNode.s * 0.5, 0.18);
+                borderHex = hslToHex(currentHue, mainNode.s * 0.3, 0.25);
+                btnBgHex = hslToHex(currentHue, mainNode.s * 0.4, 0.20);
+                btnHoverHex = hslToHex(currentHue, mainNode.s * 0.5, 0.28);
+                textColor = "#ffffff";
             } else {
-                bgColorHex = hslToHex(hue1, node1.s * 0.3, 0.92); // Muy claro
+                // En modo claro, usamos tonos pasteles muy claros (alta luminosidad)
+                bgColorHex = hslToHex(currentHue, mainNode.s * 0.3, 0.95); // Casi blanco tintado
+                panelBgHex = hslToHex(currentHue, mainNode.s * 0.4, 1);    // Blanco puro tintado
+                inputBgHex = hslToHex(currentHue, mainNode.s * 0.2, 0.98);
+                borderHex = hslToHex(currentHue, mainNode.s * 0.4, 0.85);
+                btnBgHex = hslToHex(currentHue, mainNode.s * 0.3, 0.90);
+                btnHoverHex = hslToHex(currentHue, mainNode.s * 0.4, 0.85);
+                textColor = hslToHex(currentHue, mainNode.s * 0.8, 0.15); // Texto oscuro del mismo tono
             }
 
-            // 2. EL PANEL PRINCIPAL Y BOTONES (NODO 2)
-            if (isDark) {
-                panelBgHex = hslToHex(hue2, node2.s * 0.4, 0.15);
-                btnBgHex   = hslToHex(hue2, node2.s * 0.5, 0.20);
-                inputBgHex = hslToHex(hue2, node2.s * 0.3, 0.10);
-                gridBgHex  = hslToHex(hue2, node2.s * 0.2, 0.05); // El juego más oscuro que el panel
-            } else {
-                panelBgHex = hslToHex(hue2, node2.s * 0.4, 0.98); // Casi blanco
-                btnBgHex   = hslToHex(hue2, node2.s * 0.5, 0.85); // Un poco más oscuro que el panel
-                inputBgHex = hslToHex(hue2, node2.s * 0.2, 1.00); // Blanco puro
-                gridBgHex  = hslToHex(hue2, node2.s * 0.2, 0.90);
-            }
-            
-            // El color de texto principal se calcula en función del color de fondo del panel
-            mainTextHex = getTextColorForBackground(hue2, node2.s * 0.4, isDark ? 0.15 : 0.98);
-            // El color del texto de los botones se calcula en función del fondo del botón
-            btnTextHex  = getTextColorForBackground(hue2, node2.s * 0.5, isDark ? 0.20 : 0.85);
+            // El color de acento siempre será el color puro del nodo 1
+            const accentHex = hslToHex(currentHue, mainNode.s, mainNode.l);
 
-            // 3. LOS BORDES Y DETALLES (NODO 3)
-            if (isDark) {
-                borderHex = hslToHex(hue3, node3.s * 0.6, 0.30);
-            } else {
-                borderHex = hslToHex(hue3, node3.s * 0.6, 0.70);
-            }
-
-            // 4. EL ACENTO (Volvemos al NODO 1 para cerrar el diseño, pero en su color puro)
-            accentHex = hslToHex(hue1, node1.s, node1.l);
-
-            // Inyectamos las variables
+            // Inyectamos las variables directamente en el objeto :root (html)
             document.documentElement.style.setProperty('--bg-color', bgColorHex);
             document.documentElement.style.setProperty('--panel-bg', panelBgHex);
             document.documentElement.style.setProperty('--input-bg', inputBgHex);
             document.documentElement.style.setProperty('--input-border', borderHex);
             document.documentElement.style.setProperty('--btn-bg', btnBgHex);
-            document.documentElement.style.setProperty('--btn-hover', borderHex); // El hover será el color del borde (nodo 3)
-            
-            document.documentElement.style.setProperty('--text-color', mainTextHex);
-            document.documentElement.style.setProperty('--btn-text', btnTextHex);
-            
+            document.documentElement.style.setProperty('--btn-hover', btnHoverHex);
+            document.documentElement.style.setProperty('--text-color', textColor);
+            document.documentElement.style.setProperty('--btn-text', textColor);
             document.documentElement.style.setProperty('--accent-color', accentHex);
-            document.documentElement.style.setProperty('--grid-bg', gridBgHex);
+            document.documentElement.style.setProperty('--grid-bg', panelBgHex);
 
-            drawGame(); 
+            drawGame(); // Actualizamos el fondo del juego
         }
 
+        /* =========================================================
+           2. VARIABLES Y SISTEMA DEL COLOR
+           ========================================================= */
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const nodeListDiv = document.getElementById('nodeList');
@@ -543,6 +515,7 @@
             draw(); updateVariations();
         }
 
+        // Eventos Rueda
         function getMousePos(canvasEl, evt) {
             const rect = canvasEl.getBoundingClientRect(), scaleX = canvasEl.width / rect.width, scaleY = canvasEl.height / rect.height;
             const clientX = evt.touches && evt.touches.length > 0 ? evt.touches[0].clientX : evt.clientX;
@@ -581,6 +554,7 @@
 
         window.addEventListener('mouseup', () => { if (draggingNode) { draggingNode = null; draw(); } });
         
+        // Sincronización HTML
         nodeListDiv.addEventListener('input', (e) => {
             if (/^#[0-9A-Fa-f]{6}$/i.test(e.target.value)) {
                 if (currentMode !== 'manual') setMode('manual');
@@ -605,9 +579,13 @@
             draw(); updateVariations();
         };
 
+
+        /* =========================================================
+           3. MOTOR DEL JUEGO DE LA VIDA DE CONWAY
+           ========================================================= */
         const gameCanvas = document.getElementById('gameCanvas');
         const gameCtx = gameCanvas.getContext('2d');
-        const RESOLUTION = 10; 
+        const RESOLUTION = 10; // Tamaño de cada célula en píxeles
         const COLS = gameCanvas.width / RESOLUTION;
         const ROWS = gameCanvas.height / RESOLUTION;
         
@@ -615,13 +593,14 @@
         let isGamePlaying = false;
         let gameAnimationId;
         let lastFrameTime = 0;
-        const GAME_SPEED_FPS = 12; 
+        const GAME_SPEED_FPS = 12; // Velocidad de la simulación
 
         function buildGrid() {
             return new Array(COLS).fill(null).map(() => new Array(ROWS).fill(0));
         }
 
         function drawGame() {
+            // Evaluamos la variable inyectada dinámicamente o caemos en blanco/negro según la clase si no hay inyección
             const computedStyle = getComputedStyle(document.documentElement);
             let bgGameColor = computedStyle.getPropertyValue('--grid-bg').trim();
             
