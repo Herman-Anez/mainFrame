@@ -32,26 +32,25 @@
             <div class="map-controls">
                 <h3>Variables CSS</h3>
                 <p class="subtitle">Explora cómo las variables afectan la UI</p>
-                <button class="map-var-btn" onmouseover="highlight('bg')" onmouseout="unhighlight('bg')">--bg-color <span>[N1] 🔲 Fondo</span></button>
-                <button class="map-var-btn" onmouseover="highlight('panel')" onmouseout="unhighlight('panel')">--panel-bg <span>[N2] 📦 Paneles</span></button>
-                <button class="map-var-btn" onmouseover="highlight('text')" onmouseout="unhighlight('text')">--text-color <span>[N2] 📝 Textos</span></button>
-                <button class="map-var-btn" onmouseover="highlight('inputBg')" onmouseout="unhighlight('inputBg')">--input-bg <span>[N2] ⌨️ Cajas texto</span></button>
-                <button class="map-var-btn" onmouseover="highlight('border')" onmouseout="unhighlight('border')">--input-border <span>[N3] 📏 Bordes</span></button>
-                <button class="map-var-btn" onmouseover="highlight('btnBg')" onmouseout="unhighlight('btnBg')">--btn-bg <span>[N2] 🔘 Botones</span></button>
-                <button class="map-var-btn" onmouseover="highlight('btnText')" onmouseout="unhighlight('btnText')">--btn-text <span>[N2] 💬 Texto botón</span></button>
-                <button class="map-var-btn" onmouseover="highlight('accent')" onmouseout="unhighlight('accent')">--accent-color <span>[N1] ✨ Destacado</span></button>
-                <button class="map-var-btn" onmouseover="highlight('grid')" onmouseout="unhighlight('grid')">--grid-bg <span>[N2] 👾 Fondo</span></button>
+                <button class="map-var-btn" onmouseover="highlight('primary')" onmouseout="unhighlight('primary')">--primary <span>[N1] ✨ Identidad Principal</span></button>
+                <button class="map-var-btn" onmouseover="highlight('background')" onmouseout="unhighlight('background')">--background <span>[N2] 🔲 Fondo Base</span></button>
+                <button class="map-var-btn" onmouseover="highlight('surface')" onmouseout="unhighlight('surface')">--surface <span>[N2] 📦 Tarjetas / Paneles</span></button>
+                <button class="map-var-btn" onmouseover="highlight('foreground')" onmouseout="unhighlight('foreground')">--foreground <span>[N2] 📝 Textos Principales</span></button>
+                <button class="map-var-btn" onmouseover="highlight('secondary')" onmouseout="unhighlight('secondary')">--secondary <span>[N3] 🔘 Base Secundaria</span></button>
+                <button class="map-var-btn" onmouseover="highlight('muted')" onmouseout="unhighlight('muted')">--muted <span>[N3] ⌨️ Fondos Secundarios</span></button>
+                <button class="map-var-btn" onmouseover="highlight('border')" onmouseout="unhighlight('border')">--border <span>[N3] 📏 Bordes</span></button>
+                <button class="map-var-btn" onmouseover="highlight('surface-sunken')" onmouseout="unhighlight('surface-sunken')">--surface-sunken <span>[N2] 👾 Canvas/Hundido</span></button>
             </div>
-            <div class="map-wireframe wf-element" data-target="bg">
-                <div class="wf-panel wf-element" data-target="panel border">
-                    <strong class="wf-element" data-target="text">Panel Principal</strong>
-                    <div class="wf-canvas wf-element" data-target="grid border"></div>
-                    <div class="wf-input wf-element" data-target="inputBg border text">Caja de entrada</div>
+            <div class="map-wireframe wf-element" data-target="background">
+                <div class="wf-panel wf-element" data-target="surface border">
+                    <strong class="wf-element" data-target="foreground">Panel Principal</strong>
+                    <div class="wf-canvas wf-element" data-target="surface-sunken border"></div>
+                    <div class="wf-input wf-element" data-target="muted border foreground">Caja de entrada</div>
                     <div class="wf-btn-row">
-                        <div class="wf-btn wf-element" data-target="btnBg border btnText">Botón</div>
-                        <div class="wf-btn wf-element" data-target="btnBg border btnText">Botón</div>
+                        <div class="wf-btn wf-element" data-target="secondary border secondary-foreground">Botón</div>
+                        <div class="wf-btn wf-element" data-target="secondary border secondary-foreground">Botón</div>
                     </div>
-                    <div class="wf-accent wf-element" data-target="accent">Botón Acción Principal</div>
+                    <div class="wf-accent wf-element" data-target="primary primary-foreground">Botón Acción Principal</div>
                 </div>
             </div>
         </div>
