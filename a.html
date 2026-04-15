@@ -4,28 +4,128 @@
     <meta charset="UTF-8">
     <title>Círculo Cromático Interactivo</title>
     <style>
-        /* Estilos generales para centrar el contenido y dar un fondo suave */
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; }
+        /* --- VARIABLES CSS (SISTEMA DE TEMAS) --- */
+        /* Por defecto (Modo Claro) */
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: white;
+            --text-color: #333333;
+            --input-bg: white;
+            --input-border: #cccccc;
+            --btn-bg: #e0e0e0;
+            --btn-text: #333333;
+            --btn-hover: #d0d0d0;
+            --shadow-color: rgba(0,0,0,0.1);
+            --canvas-shadow: rgba(0,0,0,0.2);
+        }
+
+        /* Cuando el body tiene la clase 'dark-mode' (Modo Oscuro) */
+        body.dark-mode {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --input-bg: #2d2d2d;
+            --input-border: #444444;
+            --btn-bg: #333333;
+            --btn-text: #e0e0e0;
+            --btn-hover: #444444;
+            --shadow-color: rgba(0,0,0,0.5);
+            --canvas-shadow: rgba(0,0,0,0.6);
+        }
+
+        /* --- ESTILOS GENERALES ACTUALIZADOS --- */
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background: var(--bg-color); /* Usamos la variable */
+            color: var(--text-color);    /* Usamos la variable */
+            transition: background 0.3s ease, color 0.3s ease; /* Transición suave */
+            margin: 0;
+            min-height: 100vh;
+        }
         
-        /* Contenedor del lienzo donde se dibujará el círculo */
-        #canvas-container { position: relative; margin: 20px; }
+        /* Botón de tema en la esquina superior derecha */
+        #themeToggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 20px;
+            border: 1px solid var(--input-border);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+
+        #themeToggle:hover {
+            background: var(--btn-hover);
+        }
         
-        /* * touch-action: none; es CRUCIAL para dispositivos táctiles.
-         * Evita que el navegador intente hacer scroll en la página cuando el usuario
-         * desliza el dedo sobre el círculo para mover un nodo.
-         */
-        canvas { border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: none; }
+        #canvas-container { position: relative; margin: 40px 20px 20px 20px; }
         
-        /* Estilos del panel de control inferior */
-        .controls { background: white; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        canvas { 
+            border-radius: 50%; 
+            box-shadow: 0 4px 15px var(--canvas-shadow); 
+            touch-action: none; 
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .controls { 
+            background: var(--panel-bg); 
+            padding: 20px; 
+            border-radius: 8px; 
+            width: 400px; 
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+        
         .node-item { display: flex; align-items: center; margin: 10px 0; gap: 10px; }
-        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; border-radius: 4px; }
-        input[type="text"] { width: 80px; padding: 5px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px;}
+        
+        input[type="color"] { 
+            border: none; 
+            width: 30px; 
+            height: 30px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            background: none;
+        }
+        
+        input[type="text"] { 
+            width: 80px; 
+            padding: 5px; 
+            font-family: monospace; 
+            border: 1px solid var(--input-border); 
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
         .rotation-control { width: 100%; margin: 20px 0; }
-        button { padding: 5px 10px; cursor: pointer; }
+        
+        button { 
+            padding: 5px 10px; 
+            cursor: pointer; 
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+        }
     </style>
 </head>
 <body>
+
+    <button id="themeToggle">🌙 Modo Oscuro</button>
 
     <div id="canvas-container">
         <canvas id="wheel" width="400" height="400"></canvas>
@@ -40,6 +140,20 @@
     </div>
 
     <script>
+        // --- 0. LÓGICA DEL MODO OSCURO ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            // Alternar la clase 'dark-mode' en el body
+            document.body.classList.toggle('dark-mode');
+            
+            // Cambiar el texto y el icono del botón dependiendo del modo activo
+            if (document.body.classList.contains('dark-mode')) {
+                themeToggleBtn.textContent = '☀️ Modo Claro';
+            } else {
+                themeToggleBtn.textContent = '🌙 Modo Oscuro';
+            }
+        });
+
         // --- 1. REFERENCIAS AL DOM ---
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d'); // El "pincel" para dibujar en 2D
