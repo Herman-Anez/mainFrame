@@ -4,9 +4,19 @@
     <meta charset="UTF-8">
     <title>Círculo Cromático Interactivo</title>
     <style>
+        /* Estilos generales para centrar el contenido y dar un fondo suave */
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; }
+        
+        /* Contenedor del lienzo donde se dibujará el círculo */
         #canvas-container { position: relative; margin: 20px; }
-        canvas { border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: none; /* Previene scroll en móviles al arrastrar */ }
+        
+        /* * touch-action: none; es CRUCIAL para dispositivos táctiles.
+         * Evita que el navegador intente hacer scroll en la página cuando el usuario
+         * desliza el dedo sobre el círculo para mover un nodo.
+         */
+        canvas { border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); touch-action: none; }
+        
+        /* Estilos del panel de control inferior */
         .controls { background: white; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .node-item { display: flex; align-items: center; margin: 10px 0; gap: 10px; }
         input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; border-radius: 4px; }
@@ -30,31 +40,50 @@
     </div>
 
     <script>
+        // --- 1. REFERENCIAS AL DOM ---
         const canvas = document.getElementById('wheel');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d'); // El "pincel" para dibujar en 2D
         const nodeListDiv = document.getElementById('nodeList');
         const globalRotInput = document.getElementById('globalRotation');
         
+        // --- 2. ESTADO GLOBAL DE LA APLICACIÓN ---
+        /*
+         * 'nodes' es el cerebro de nuestros colores. Cada objeto guarda:
+         * - id: Identificador único (usamos Date.now() para asegurar que no se repitan).
+         * - baseAngle: El ángulo original del color (0 a 360). Representa el Tono (Hue).
+         * - s: Saturación (0.0 a 1.0). Representa la distancia desde el centro.
+         * - l: Luminosidad o Brillo (0.0 a 1.0).
+         */
         let nodes = [
             { id: Date.now(), baseAngle: 0, s: 1, l: 0.5 },
             { id: Date.now()+1, baseAngle: 120, s: 1, l: 0.5 },
             { id: Date.now()+2, baseAngle: 240, s: 1, l: 0.5 }
         ];
 
-        let draggingNode = null; // Variable para saber si estamos arrastrando un nodo
+        // Variable para recordar qué nodo estamos arrastrando actualmente con el ratón
+        let draggingNode = null; 
 
+        // --- 3. UTILIDADES MATEMÁTICAS (CONVERSIÓN DE COLORES) ---
+
+        /**
+         * Convierte un código Hexadecimal (ej: "#FF0000") a formato HSL (Tono, Saturación, Luminosidad).
+         * Necesitamos esto cuando el usuario escribe un código manualmente.
+         */
         function hexToHSL(hex) {
+            // Extraer pares de caracteres y convertir de Hex a Decimal (0-255), luego normalizar (0-1)
             let r = parseInt(hex.slice(1, 3), 16) / 255;
             let g = parseInt(hex.slice(3, 5), 16) / 255;
             let b = parseInt(hex.slice(5, 7), 16) / 255;
+            
             let max = Math.max(r, g, b), min = Math.min(r, g, b);
-            let h, s, l = (max + min) / 2;
+            let h, s, l = (max + min) / 2; // La luminosidad es el promedio del color más fuerte y el más débil
 
             if (max === min) {
-                h = s = 0; 
+                h = s = 0; // Si no hay diferencia, es un tono de gris (saturación 0)
             } else {
                 let d = max - min;
                 s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                // Calcular el ángulo (Hue) dependiendo de qué color primario domine
                 switch (max) {
                     case r: h = (g - b) / d + (g < b ? 6 : 0); break;
                     case g: h = (b - r) / d + 2; break;
@@ -65,11 +94,15 @@
             return { h: h * 360, s: s, l: l };
         }
 
+        /**
+         * Convierte valores HSL a código Hexadecimal.
+         * Necesitamos esto para actualizar el fondo de los circulitos o llenar las cajas de texto.
+         */
         function hslToHex(h, s, l) {
             let r, g, b;
-            h /= 360;
+            h /= 360; // Normalizar el ángulo entre 0 y 1
             if (s === 0) {
-                r = g = b = l; 
+                r = g = b = l; // Escala de grises
             } else {
                 const hue2rgb = (p, q, t) => {
                     if (t < 0) t += 1;
@@ -85,24 +118,34 @@
                 g = hue2rgb(p, q, h);
                 b = hue2rgb(p, q, h - 1/3);
             }
+            // Convertir de vuelta a 0-255, redondear, pasar a Hex y asegurar que tenga 2 dígitos ('padStart')
             const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
             return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
         }
 
+        // --- 4. MOTOR DE RENDERIZADO (DIBUJO EN PANTALLA) ---
+
+        /**
+         * Limpia todo el lienzo y redibuja el círculo de fondo y todos los nodos encima.
+         * Se ejecuta unas 60 veces por segundo mientras arrastras el ratón.
+         */
         function draw() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = 180;
-            const offset = parseInt(globalRotInput.value);
+            const offset = parseInt(globalRotInput.value); // Grados extra sumados por el control deslizante
 
+            // Borrar el lienzo anterior por completo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Dibujar círculo de fondo con gradiente
+            // 1. Dibujar el círculo de fondo (el arcoiris)
             for (let i = 0; i < 360; i++) {
                 ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
+                ctx.moveTo(centerX, centerY); // Línea desde el centro
+                // Dibujar un arco de 1.5 grados de ancho. (Usamos 1.5 en lugar de 1 para solapar levemente y evitar líneas blancas)
                 ctx.arc(centerX, centerY, radius, i * Math.PI/180, (i+1.5) * Math.PI/180);
                 
+                // Crear el degradado: Centro gris (Saturación 0) -> Borde color puro (Saturación 100)
                 let gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
                 gradient.addColorStop(0, `hsl(${i}, 0%, 50%)`);   
                 gradient.addColorStop(1, `hsl(${i}, 100%, 50%)`); 
@@ -111,30 +154,42 @@
                 ctx.fill();
             }
 
-            // Dibujar Nodos
+            // 2. Dibujar los Nodos (Marcadores)
             nodes.forEach(node => {
+                // Ángulo real = ángulo guardado + offset del slider
                 const totalAngle = (node.baseAngle + offset) % 360;
+                
+                // Convertir grados a radianes (JavaScript usa radianes para trigonometría)
                 const rad = totalAngle * Math.PI / 180;
+                
+                // La distancia al centro depende de la saturación (1 = borde, 0 = centro)
                 const nodeRadius = radius * node.s; 
                 
+                // TRIGONOMETRÍA: Convertir coordenadas Polares (Radio, Ángulo) a Cartesianas (X, Y)
                 const x = centerX + nodeRadius * Math.cos(rad);
                 const y = centerY + nodeRadius * Math.sin(rad);
 
                 ctx.beginPath();
-                ctx.arc(x, y, 12, 0, Math.PI * 2);
+                ctx.arc(x, y, 12, 0, Math.PI * 2); // Dibujar el circulito del nodo (radio 12px)
                 
+                // Rellenar el nodo con su color exacto
                 ctx.fillStyle = hslToHex(totalAngle, node.s, node.l);
                 ctx.fill();
                 
                 ctx.lineWidth = 3;
-                // Resaltar el nodo si se está arrastrando
+                // Si el nodo está siendo arrastrado, pintar el borde de amarillo (#FFD700), si no, blanco o negro según contraste
                 ctx.strokeStyle = (draggingNode && draggingNode.id === node.id) ? '#FFD700' : (node.l > 0.5 ? '#000' : '#fff'); 
                 ctx.stroke();
             });
         }
 
+        // --- 5. SINCRONIZACIÓN DE LA INTERFAZ (HTML) ---
+
+        /**
+         * Reconstruye la lista de inputs (textos y selectores de color) basándose en el array de nodos.
+         */
         function buildDOM() {
-            nodeListDiv.innerHTML = '';
+            nodeListDiv.innerHTML = ''; // Vaciar la lista actual
             const offset = parseInt(globalRotInput.value);
             
             nodes.forEach((node, index) => {
@@ -143,6 +198,7 @@
                 
                 const div = document.createElement('div');
                 div.className = 'node-item';
+                // Generar el HTML para el nodo: Nombre, Selector de color nativo, Input de texto, y Botón de borrar
                 div.innerHTML = `
                     <span>Nodo ${index + 1}:</span>
                     <input type="color" value="${hex}" data-id="${node.id}">
@@ -151,12 +207,14 @@
                 `;
                 nodeListDiv.appendChild(div);
             });
-            draw();
+            draw(); // Asegurar que el canvas coincide con los datos
         }
 
-        // --- EVENTOS DEL RATÓN PARA EL CANVAS ---
+        // --- 6. EVENTOS DEL RATÓN PARA EL CANVAS (DRAG & DROP) ---
 
-        // Función auxiliar para obtener posición del ratón
+        /**
+         * Extrae las coordenadas X e Y exactas del ratón relativas a la esquina superior izquierda del lienzo.
+         */
         function getMousePos(evt) {
             const rect = canvas.getBoundingClientRect();
             return {
@@ -165,7 +223,7 @@
             };
         }
 
-        // Click abajo: detectar si tocamos un nodo
+        // EVENTO: Al pulsar el botón del ratón
         canvas.addEventListener('mousedown', (e) => {
             const pos = getMousePos(e);
             const centerX = canvas.width / 2;
@@ -173,7 +231,8 @@
             const radius = 180;
             const offset = parseInt(globalRotInput.value);
 
-            // Revisar nodos en orden inverso (para seleccionar el que esté encima si se superponen)
+            // Bucle inverso: comprobamos los nodos desde el último creado al primero.
+            // Así, si dos nodos están uno encima de otro, agarramos el que visualmente está "arriba".
             for (let i = nodes.length - 1; i >= 0; i--) {
                 const node = nodes[i];
                 const totalAngle = (node.baseAngle + offset) % 360;
@@ -182,17 +241,17 @@
                 const nodeX = centerX + nodeRadius * Math.cos(rad);
                 const nodeY = centerY + nodeRadius * Math.sin(rad);
 
-                // Distancia entre el ratón y el centro del nodo (Teorema de Pitágoras)
+                // TEOREMA DE PITÁGORAS: c = √(a² + b²) para calcular la distancia lineal entre ratón y nodo
                 const distToNode = Math.sqrt((pos.x - nodeX)**2 + (pos.y - nodeY)**2);
                 
-                if (distToNode <= 15) { // 15px de área clickeable
-                    draggingNode = node;
-                    break;
+                if (distToNode <= 15) { // Si el ratón está a menos de 15px del centro del nodo (hizo clic en él)
+                    draggingNode = node; // Lo "agarramos"
+                    break; // Detenemos la búsqueda para no agarrar dos a la vez
                 }
             }
         });
 
-        // Movimiento del ratón: arrastrar nodo y cambiar cursor
+        // EVENTO: Al mover el ratón por encima del canvas
         canvas.addEventListener('mousemove', (e) => {
             const pos = getMousePos(e);
             const centerX = canvas.width / 2;
@@ -201,33 +260,36 @@
             const offset = parseInt(globalRotInput.value);
 
             if (draggingNode) {
-                // Calcular nueva posición relativa al centro
+                // SI ESTAMOS ARRASTRANDO UN NODO:
+
+                // 1. Calcular distancias en los ejes respecto al centro del círculo
                 let dx = pos.x - centerX;
                 let dy = pos.y - centerY;
 
-                // Calcular nueva saturación (distancia)
+                // 2. Calcular la distancia lineal al centro para actualizar la Saturación
                 let distFromCenter = Math.sqrt(dx*dx + dy*dy);
-                if (distFromCenter > radius) distFromCenter = radius; // Limitar al círculo
-                draggingNode.s = distFromCenter / radius;
+                if (distFromCenter > radius) distFromCenter = radius; // Evitar que el nodo se salga del círculo
+                draggingNode.s = distFromCenter / radius; // Convertir de píxeles a porcentaje (0.0 - 1.0)
 
-                // Calcular nuevo ángulo (Tono)
+                // 3. Calcular el nuevo ángulo usando atan2 (devuelve radianes entre -PI y PI)
                 let angleRad = Math.atan2(dy, dx);
-                let angleDeg = angleRad * 180 / Math.PI;
-                if (angleDeg < 0) angleDeg += 360;
+                let angleDeg = angleRad * 180 / Math.PI; // Convertir a grados
+                if (angleDeg < 0) angleDeg += 360; // Evitar grados negativos
                 
-                // Restar el offset global para guardar el ángulo base real
+                // Restar el offset global para guardar el "ángulo base" puro en memoria
                 draggingNode.baseAngle = (angleDeg - offset + 360) % 360;
 
-                // Actualizar los inputs de texto y color en vivo
+                // 4. Actualizar los valores en los inputs HTML en tiempo real mientras movemos
                 const hex = hslToHex((draggingNode.baseAngle + offset) % 360, draggingNode.s, draggingNode.l);
                 const colorInput = document.querySelector(`input[type="color"][data-id="${draggingNode.id}"]`);
                 const textInput = document.querySelector(`input[type="text"][data-id="${draggingNode.id}"]`);
                 if(colorInput) colorInput.value = hex;
                 if(textInput) textInput.value = hex;
 
-                draw();
+                draw(); // Redibujar el lienzo
             } else {
-                // Cambiar el cursor a "pointer" si pasamos por encima de un nodo
+                // SI NO ESTAMOS ARRASTRANDO NADA:
+                // Solo comprobar si pasamos por encima de un nodo para cambiar el cursor a "la manita" (pointer)
                 let isHovering = false;
                 nodes.forEach(node => {
                     const totalAngle = (node.baseAngle + offset) % 360;
@@ -242,49 +304,60 @@
             }
         });
 
-        // Soltar el ratón (incluso fuera del canvas)
+        // EVENTO: Al soltar el clic del ratón (lo ponemos en 'window' por si el usuario saca el ratón fuera del canvas)
         window.addEventListener('mouseup', () => {
             if (draggingNode) {
-                draggingNode = null;
-                draw(); // Redibujar para quitar el borde de selección
+                draggingNode = null; // Soltamos el nodo
+                draw(); // Redibujamos una última vez para quitar el borde amarillo de selección
             }
         });
 
-        // --- RESTO DEL CÓDIGO ---
+        // --- 7. EVENTOS DE LA INTERFAZ HTML ---
 
+        // Cuando el usuario escribe manualmente un código Hex o usa el selector de color nativo
         nodeListDiv.addEventListener('input', (e) => {
             const val = e.target.value;
+            // Solo procesar si tiene un formato válido (ej: "#FF00AA")
             if (val.length === 7 && val.startsWith('#')) {
+                // Buscar qué nodo fue editado basándonos en el atributo data-id del input
                 const id = parseFloat(e.target.dataset.id);
                 const node = nodes.find(n => n.id === id);
                 
+                // Convertir ese Hex a datos matemáticos (HSL)
                 const hsl = hexToHSL(val);
+                // Actualizar la memoria del nodo restando el offset del deslizador
                 node.baseAngle = (hsl.h - parseInt(globalRotInput.value) + 360) % 360;
                 node.s = hsl.s; 
                 node.l = hsl.l; 
                 
+                // Sincronizar el "hermano": si editaste el texto, actualiza el color-picker, y viceversa.
                 const parent = e.target.parentElement;
                 if (e.target.type === 'text') {
                     parent.querySelector('input[type="color"]').value = val;
                 } else {
                     parent.querySelector('input[type="text"]').value = val.toUpperCase();
                 }
-                draw();
+                draw(); // Redibujar el nodo en su nueva posición
             }
         });
 
+        // Botón "Añadir Nodo": Crea un nodo en una posición aleatoria
         document.getElementById('addNode').onclick = () => {
             nodes.push({ id: Date.now(), baseAngle: Math.random() * 360, s: 1, l: 0.5 });
-            buildDOM();
+            buildDOM(); // Recrear la lista para mostrar el nuevo input
         };
 
+        // Función global invocada por los botones "×" para eliminar el nodo específico
         window.removeNode = (id) => {
-            nodes = nodes.filter(n => n.id !== id);
+            nodes = nodes.filter(n => n.id !== id); // Filtrar el array dejando fuera el que queremos borrar
             buildDOM();
         };
 
+        // Cuando el usuario mueve el control maestro de rotación
         globalRotInput.oninput = () => {
             const offset = parseInt(globalRotInput.value);
+            
+            // Recorrer todos los nodos para actualizar sus textos Hexadecimales sin tener que regenerar el HTML entero
             nodes.forEach(node => {
                 const currentHue = (node.baseAngle + offset) % 360;
                 const hex = hslToHex(currentHue, node.s, node.l); 
@@ -293,11 +366,14 @@
                 const textInput = document.querySelector(`input[type="text"][data-id="${node.id}"]`);
                 
                 if(colorInput) colorInput.value = hex;
+                // document.activeElement evita que reemplacemos el texto mientras el usuario está tecleando activamente
                 if(textInput && document.activeElement !== textInput) textInput.value = hex;
             });
-            draw();
+            draw(); // Redibujar todos los nodos girados
         };
 
+        // --- 8. INICIO DE LA APLICACIÓN ---
+        // Generar la interfaz por primera vez al cargar la página
         buildDOM();
     </script>
 </body>
