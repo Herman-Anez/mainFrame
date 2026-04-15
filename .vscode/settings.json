@@ -1,4 +1,11 @@
 {
+    /*
+        #365049 background oscuro
+        #31463F background claro
+        #45625B editor focus
+        #9FC7BC iconos
+        #6FA193 comentarios
+    */
     "workbench.colorCustomizations": {
         ///Aux
         "breadcrumb.background": "#365049",
@@ -64,23 +71,24 @@
         //"multiDiffEditor.background": "#31463F", //Secondary bac
         //////////////////////////Documentar
         /////////////////////////////////////////////////
+        //editor focus
         "editor.lineHighlightBackground": "#45625B",
         "editorGroup.dropBackground": "#45625B",
         "list.dropBackground": "#45625B",
         "list.focusBackground": "#45625B",
         "list.inactiveSelectionBackground": "#45625B",
         "sideBar.dropBackground": "#45625B",
-        //"editor.inactiveLineHighlightBackground": "#8C659D",
-        //"editorGutter.commentRangeForeground": "#8C659D",
-        //"editorGutter.itemBackground": "#8C659D",
-        //"editorOverviewRuler.commentDraftForeground": "#8C659D",
-        //"editorOverviewRuler.commentForeground": "#8C659D",
-        //"editorOverviewRuler.commentUnresolvedForeground": "#8C659D",
-        //"interactive.inactiveCodeBorder": "#8C659D",
-        //"notebook.selectedCellBackground": "#8C659D",
-        //"panelSection.dropBackground": "#8C659D",
-        //"terminal.dropBackground": "#8C659D",
-        //"terminalCommandGuide.foreground": "#8C659D",
+        //"editor.inactiveLineHighlightBackground": "#45625B",
+        //"editorGutter.commentRangeForeground": "#45625B",
+        //"editorGutter.itemBackground": "#45625B",
+        //"editorOverviewRuler.commentDraftForeground": "#45625B",
+        //"editorOverviewRuler.commentForeground": "#45625B",
+        //"editorOverviewRuler.commentUnresolvedForeground": "#45625B",
+        //"interactive.inactiveCodeBorder": "#45625B",
+        //"notebook.selectedCellBackground": "#45625B",
+        //"panelSection.dropBackground": "#45625B",
+        //"terminal.dropBackground": "#45625B",
+        //"terminalCommandGuide.foreground": "#45625B",
         //////////////////////////////////
         //iconos
         "activityBar.foreground": "#9FC7BC",
@@ -183,7 +191,7 @@
         //"terminalSymbolIcon.symbolText": "#9FC7BC",
         //"terminalSymbolIcon.symbolicLinkFileForeground": "#9FC7BC",
         //"terminalSymbolIcon.symbolicLinkFolderForeground": "#9FC7BC",
-        //"terminalSymbolIcon.tagForeground": "#9FC7BC",
+        //"terminalSymbolIcon.tagForeground": "#",
         //"tree.tableOddRowsBackground": "#9FC7BC0a",
         ////////////////////////////////////////////
         ////////////////////////iconos 2
