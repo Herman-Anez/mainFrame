@@ -1,7 +1,7 @@
 # Herramientas y conceptos por aprender
 
 gRPC <https://buf.build/grpc/web?version=v2.0.2>
-OpenTelemetry (OTel)
+OpenTelemetry (OTel) https://opentelemetry.io/docs/
 
 herramientas de ia
 
@@ -108,7 +108,7 @@ CONDICIONES
 
 ModalidaD: REMOTO
 Ubicación: España.
-Horario: Oficina.
+Horario: Oficina
 ------------------
 
 Requisitos
@@ -149,14 +149,10 @@ Esto demuestra que no solo sabes construir la casa (desarrollo), sino que tambi�
 - [What is Command Query Responsibility Segregation (CQRS)?](https://www.reddit.com/r/programming/comments/1j127f9/what_is_command_query_responsibility_segregation/)
 La consistencia en una SSOT (Single Source of Truth o Fuente Única de Verdad)
 
-
 [¿Qué es el patrón SAGA y cómo se implementa?](https://blog.shakersworks.com/que-es-el-patron-saga-y-como-implementarlo)
-
 
 Control estricto de acceso (RBAC)
 
-
-
-Herramientas 
+Herramientas
 
 Webmin

@@ -1,8 +1,4 @@
-# settings
-
-´´´json
 {
-    "markdown-preview-enhanced.revealjsTheme": "#000000.css",
     "markdown-preview-enhanced.previewTheme": "atom-dark.css",
     "explorer.compactFolders": false,
     "chat.useAgentSkills": true,
@@ -14,7 +10,7 @@
         "markdown": false,
         "scminput": false
     },
-    "continue.enableTabAutocomplete": false,
+    "continue.enableTabAutocomplete": true,
     "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
     "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.dockercompose",
     "gitlens.ai.model": "vscode",
@@ -47,6 +43,7 @@
         "editor.defaultFormatter": "ms-azuretools.vscode-containers"
     },
     "auto-insert-comma.enableAutoInsertComma": true,
+
     "workbench.colorCustomizations": {
         "editorHoverWidget.border": "#ff0000",
         //
@@ -70,7 +67,9 @@
         //
         "editorWhitespace.foreground": "#ffa500",
         //
+
     },
+    "workbench.editor.enablePreview": false,
     "indentRainbow.colors": [
         "rgba(255,255,64,0.07)",
         "rgba(127,255,127,0.07)",
@@ -88,7 +87,7 @@
                     "punctuation.separator.table.markdown",
                 ],
                 "settings": {
-                    "foreground": "#89ddff"
+                    "foreground": "#267291"
                 }
             }
         ],
@@ -110,8 +109,7 @@
     "editor.semanticTokenColorCustomizations": {},
     "editor.minimap.enabled": false,
     "editor.wordWrap": "on",
-    "breadcrumbs.enabled": false,
-    "editor.renderWhitespace": "all",
+    "editor.renderWhitespace": "none",
     "files.autoSave": "afterDelay",
+    "markdown-preview-enhanced.plantumlServer":"https://kroki.io/plantuml/svg/"
 }
-```
