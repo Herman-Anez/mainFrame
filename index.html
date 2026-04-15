@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Círculo Cromático + Juego de la Vida</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode"> <!-- Dark mode por defecto -->
+
+    <div class="top-bar">
+        <button onclick="openMapModal()" class="top-btn" title="Ver Mapa de Variables CSS">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            Mapa CSS
+        </button>
+        <button id="applyThemeBtn" class="top-btn btn-primary" onclick="applyDynamicTheme()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+            Inyectar Paleta
+        </button>
+        <button id="themeToggle" class="top-btn">☀️ Base Clara</button>
+    </div>
+
+    <!-- Modal del Mapa CSS -->
+    <div id="cssMapModal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <button class="close-modal" aria-label="Cerrar modal" onclick="closeMapModal()">&times;</button>
+            <div class="map-controls">
+                <h3>Variables CSS</h3>
+                <p class="subtitle">Explora cómo las variables afectan la UI</p>
+                <button class="map-var-btn" onmouseover="highlight('bg')" onmouseout="unhighlight('bg')">--bg-color <span>[N1] 🔲 Fondo</span></button>
+                <button class="map-var-btn" onmouseover="highlight('panel')" onmouseout="unhighlight('panel')">--panel-bg <span>[N2] 📦 Paneles</span></button>
+                <button class="map-var-btn" onmouseover="highlight('text')" onmouseout="unhighlight('text')">--text-color <span>[N2] 📝 Textos</span></button>
+                <button class="map-var-btn" onmouseover="highlight('inputBg')" onmouseout="unhighlight('inputBg')">--input-bg <span>[N2] ⌨️ Cajas texto</span></button>
+                <button class="map-var-btn" onmouseover="highlight('border')" onmouseout="unhighlight('border')">--input-border <span>[N3] 📏 Bordes</span></button>
+                <button class="map-var-btn" onmouseover="highlight('btnBg')" onmouseout="unhighlight('btnBg')">--btn-bg <span>[N2] 🔘 Botones</span></button>
+                <button class="map-var-btn" onmouseover="highlight('btnText')" onmouseout="unhighlight('btnText')">--btn-text <span>[N2] 💬 Texto botón</span></button>
+                <button class="map-var-btn" onmouseover="highlight('accent')" onmouseout="unhighlight('accent')">--accent-color <span>[N1] ✨ Destacado</span></button>
+                <button class="map-var-btn" onmouseover="highlight('grid')" onmouseout="unhighlight('grid')">--grid-bg <span>[N2] 👾 Fondo</span></button>
+            </div>
+            <div class="map-wireframe wf-element" data-target="bg">
+                <div class="wf-panel wf-element" data-target="panel border">
+                    <strong class="wf-element" data-target="text">Panel Principal</strong>
+                    <div class="wf-canvas wf-element" data-target="grid border"></div>
+                    <div class="wf-input wf-element" data-target="inputBg border text">Caja de entrada</div>
+                    <div class="wf-btn-row">
+                        <div class="wf-btn wf-element" data-target="btnBg border btnText">Botón</div>
+                        <div class="wf-btn wf-element" data-target="btnBg border btnText">Botón</div>
+                    </div>
+                    <div class="wf-accent wf-element" data-target="accent">Botón Acción Principal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="app-container">
+        <!-- Sección de Lienzos -->
+        <section class="canvas-section">
+            <div class="canvas-container glass-panel tooltip-container">
+                <canvas id="wheel" width="350" height="350"></canvas>
+                <span class="tooltip">Arrastra los nodos para elegir colores</span>
+            </div>
+            
+            <div class="game-container glass-panel">
+                <div class="game-header">
+                    <h2>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                        Autómata Celular
+                    </h2>
+                    <p class="subtitle">Pinta sobre el cuadro para añadir células</p>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="gameCanvas" width="350" height="350"></canvas>
+                </div>
+                <div class="game-btn-group">
+                    <button onclick="toggleGame()" id="playPauseBtn" class="btn icon-btn">
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Iniciar
+                    </button>
+                    <button onclick="randomizeGame()" class="btn icon-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg> Azar
+                    </button>
+                    <button onclick="resetGame()" class="btn btn-outline icon-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Limpiar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Controles -->
+        <aside class="controls glass-panel">
+            <div class="control-group">
+                <label>Modo de Armonía</label>
+                <div class="modes-selector select-group">
+                    <button onclick="setMode('manual')" id="btn-manual" class="mode-btn">Libre</button>
+                    <button onclick="setMode('complementary')" id="btn-complementary" class="mode-btn">Complementario</button>
+                    <button onclick="setMode('triad')" id="btn-triad" class="mode-btn active">Tríada</button>
+                    <button onclick="setMode('tetrad')" id="btn-tetrad" class="mode-btn">Tetráda</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="globalRotation">Desplazamiento / Rotación:</label>
+                <input type="range" id="globalRotation" class="custom-range" min="0" max="360" value="0">
+            </div>
+
+            <button id="addNode" class="btn btn-dashed icon-btn">+ Añadir Color Libre</button>
+            <div id="nodeList" class="node-list"></div>
+
+            <hr class="divider">
+
+            <div class="control-group">
+                <label>Paleta Generada <span class="badge">Clic para copiar</span></label>
+                <div id="palettePreview" class="palette-preview"></div>
+            </div>
+
+            <button id="exportBtn" class="btn btn-primary btn-large icon-btn" onclick="exportCSS()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                Copiar código CSS
+            </button>
+        </aside>
+    </main>
+
+    <!-- JS -->
+    <script src="script.js"></script>
+</body>
+</html>
