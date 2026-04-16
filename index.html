@@ -4,43 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Círculo Cromático + Juego de la Vida</title>
-    <!-- Google Fonts: Inter -->
+
+    <!-- ============================================================
+         FUENTES: Google Fonts — Inter
+         Inter es la fuente utilizada para toda la interfaz.
+         Se cargan los pesos 400 (normal), 500 (medium), 600 (semi) y 700 (bold).
+         ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- CSS -->
+
+    <!-- Hoja de estilos principal -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-mode"> <!-- Dark mode por defecto -->
 
+<!-- 
+  El body arranca con clase "dark-mode" para que el tema oscuro 
+  sea el predeterminado. Esta clase puede ser removida/agregada  
+  dinámicamente por el script según el modo seleccionado.
+-->
+<body class="dark-mode">
+
+    <!-- ============================================================
+         BARRA SUPERIOR FIJA (top-bar)
+         Contiene:
+           1. Botón "Mapa CSS" — Abre un modal interactivo que muestra
+              qué variable CSS afecta a qué parte de la UI.
+           2. Selector de Tema — 3 modos independientes:
+              - ☀️ Claro:  Tema CSS estático claro (nodos NO afectan UI)
+              - 🌙 Oscuro: Tema CSS estático oscuro (nodos NO afectan UI)
+              - 🎨 Libre:  Los nodos controlan dinámicamente TODA la UI
+         ============================================================ -->
     <div class="top-bar">
         <button onclick="openMapModal()" class="top-btn" title="Ver Mapa de Variables CSS">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
             Mapa CSS
         </button>
-        <button id="applyThemeBtn" class="top-btn btn-primary" onclick="applyDynamicTheme()">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
-            Inyectar Paleta
-        </button>
-        <button id="themeToggle" class="top-btn">☀️ Base Clara</button>
+        <div class="theme-selector select-group">
+            <button onclick="setThemeMode('light')" id="btn-theme-light" class="mode-btn">☀️ Claro</button>
+            <button onclick="setThemeMode('dark')" id="btn-theme-dark" class="mode-btn active">🌙 Oscuro</button>
+            <button onclick="setThemeMode('free')" id="btn-theme-free" class="mode-btn">🎨 Libre</button>
+        </div>
     </div>
 
-    <!-- Modal del Mapa CSS -->
+    <!-- ============================================================
+         MODAL: MAPA DE VARIABLES CSS (Design Tokens)
+         
+         Este modal tiene dos paneles:
+         
+         PANEL IZQUIERDO (map-controls):
+           Lista de botones con las variables CSS semánticas.
+           Al pasar el mouse sobre un botón, se ilumina el elemento
+           correspondiente en el wireframe de la derecha.
+           Cada botón indica:
+             - El nombre del Design Token (ej: --primary)
+             - El nodo fuente [N1], [N2] o [N3] que lo genera
+             - Un emoji descriptivo del rol
+         
+         PANEL DERECHO (map-wireframe):  
+           Un mockup interactivo que simula una UI genérica.
+           Cada elemento tiene un atributo data-target que enlaza
+           con la variable CSS que lo estiliza. Las funciones
+           highlight() y unhighlight() del JS añaden/quitan clases
+           CSS de resaltado visual (ej: .highlight-primary).
+         ============================================================ -->
     <div id="cssMapModal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <button class="close-modal" aria-label="Cerrar modal" onclick="closeMapModal()">&times;</button>
+            
+            <!-- Panel izquierdo: Lista de Design Tokens -->
             <div class="map-controls">
                 <h3>Variables CSS</h3>
                 <p class="subtitle">Explora cómo las variables afectan la UI</p>
+                <!-- N1: Identidad Primaria — Color de marca, botones de acción -->
                 <button class="map-var-btn" onmouseover="highlight('primary')" onmouseout="unhighlight('primary')">--primary <span>[N1] ✨ Identidad Principal</span></button>
+                <!-- N2: Fondos y Superficies — Controla el layout de fondo -->
                 <button class="map-var-btn" onmouseover="highlight('background')" onmouseout="unhighlight('background')">--background <span>[N2] 🔲 Fondo Base</span></button>
                 <button class="map-var-btn" onmouseover="highlight('surface')" onmouseout="unhighlight('surface')">--surface <span>[N2] 📦 Tarjetas / Paneles</span></button>
                 <button class="map-var-btn" onmouseover="highlight('foreground')" onmouseout="unhighlight('foreground')">--foreground <span>[N2] 📝 Textos Principales</span></button>
+                <!-- N3: Secundarios — Controles sutiles, bordes, campos -->
                 <button class="map-var-btn" onmouseover="highlight('secondary')" onmouseout="unhighlight('secondary')">--secondary <span>[N3] 🔘 Base Secundaria</span></button>
                 <button class="map-var-btn" onmouseover="highlight('muted')" onmouseout="unhighlight('muted')">--muted <span>[N3] ⌨️ Fondos Secundarios</span></button>
                 <button class="map-var-btn" onmouseover="highlight('border')" onmouseout="unhighlight('border')">--border <span>[N3] 📏 Bordes</span></button>
+                <!-- N2: Canvas hundido — Fondo de elementos como el juego -->
                 <button class="map-var-btn" onmouseover="highlight('surface-sunken')" onmouseout="unhighlight('surface-sunken')">--surface-sunken <span>[N2] 👾 Canvas/Hundido</span></button>
             </div>
+            
+            <!-- Panel derecho: Wireframe interactivo de la UI -->
+            <!-- data-target vincula cada elemento con su Design Token -->
             <div class="map-wireframe wf-element" data-target="background">
                 <div class="wf-panel wf-element" data-target="surface border">
                     <strong class="wf-element" data-target="foreground">Panel Principal</strong>
@@ -56,14 +107,35 @@
         </div>
     </div>
 
+    <!-- ============================================================
+         CONTENIDO PRINCIPAL (app-container)
+         
+         Layout en dos columnas (flex-wrap):
+           IZQUIERDA: Lienzos visuales (círculo cromático + autómata)
+           DERECHA:   Panel de controles (modos, nodos, paleta)
+         ============================================================ -->
     <main class="app-container">
-        <!-- Sección de Lienzos -->
+    
+        <!-- =====================================================
+             COLUMNA IZQUIERDA: LIENZOS VISUALES
+             ===================================================== -->
         <section class="canvas-section">
+        
+            <!-- Círculo Cromático (Color Wheel)
+                 Canvas de 350x350px donde se dibuja la rueda de color.
+                 Los nodos se arrastran sobre él para seleccionar colores.
+                 - Ángulo en la rueda = Matiz (Hue, 0°–360°)
+                 - Distancia al centro = Saturación (0–1)
+                 - Claridad se controla por el slider independiente -->
             <div class="canvas-container glass-panel tooltip-container">
                 <canvas id="wheel" width="350" height="350"></canvas>
                 <span class="tooltip">Arrastra los nodos para elegir colores</span>
             </div>
             
+            <!-- Autómata Celular (Juego de la Vida de Conway)
+                 Simulación interactiva donde las células vivas toman
+                 los colores de los nodos del círculo cromático.
+                 El usuario puede pintar células y ejecutar/pausar la sim. -->
             <div class="game-container glass-panel">
                 <div class="game-header">
                     <h2>
@@ -75,6 +147,7 @@
                 <div class="canvas-wrapper">
                     <canvas id="gameCanvas" width="350" height="350"></canvas>
                 </div>
+                <!-- Controles del Autómata: Play/Pause, Aleatorizar, Limpiar -->
                 <div class="game-btn-group">
                     <button onclick="toggleGame()" id="playPauseBtn" class="btn icon-btn">
                         <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Iniciar
@@ -89,8 +162,17 @@
             </div>
         </section>
 
-        <!-- Sección de Controles -->
+        <!-- =====================================================
+             COLUMNA DERECHA: PANEL DE CONTROLES
+             ===================================================== -->
         <aside class="controls glass-panel">
+        
+            <!-- Selector de Modo de Armonía Cromática
+                 Determina cómo se distribuyen los nodos en la rueda:
+                 - Libre: Posición manual de cada nodo
+                 - Complementario: 2 nodos a 180° de distancia
+                 - Tríada: 3 nodos a 120° de distancia
+                 - Tétrada: 4 nodos a 90° de distancia -->
             <div class="control-group">
                 <label>Modo de Armonía</label>
                 <div class="modes-selector select-group">
@@ -101,21 +183,38 @@
                 </div>
             </div>
 
+            <!-- Slider de Rotación Global
+                 Rota todos los nodos simultáneamente alrededor de la rueda.
+                 Esto permite explorar distintas paletas manteniendo las
+                 relaciones angulares entre nodos. Rango: 0°–360° -->
             <div class="control-group">
                 <label for="globalRotation">Desplazamiento / Rotación:</label>
                 <input type="range" id="globalRotation" class="custom-range" min="0" max="360" value="0">
             </div>
 
+            <!-- Botón para añadir nodos adicionales (solo en modo "Libre") -->
             <button id="addNode" class="btn btn-dashed icon-btn">+ Añadir Color Libre</button>
+            
+            <!-- Lista de Nodos (generada por JS)
+                 Cada nodo muestra: etiqueta de rol, color picker,
+                 input hex, slider de claridad, y botón eliminar.
+                 Ver buildDOM() en script.js para la estructura. -->
             <div id="nodeList" class="node-list"></div>
 
             <hr class="divider">
 
+            <!-- Paleta Generada (generada por JS)
+                 Muestra las variaciones de color (100–900) para cada nodo.
+                 Hacer clic en una muestra copia su hex al portapapeles. -->
             <div class="control-group">
                 <label>Paleta Generada <span class="badge">Clic para copiar</span></label>
                 <div id="palettePreview" class="palette-preview"></div>
             </div>
 
+            <!-- Botón de Exportación CSS
+                 Copia al portapapeles dos bloques:
+                 1. Design Tokens semánticos (--primary, --background, etc.)
+                 2. Escalas RAW del 100 al 900 para cada nodo -->
             <button id="exportBtn" class="btn btn-primary btn-large icon-btn" onclick="exportCSS()">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                 Copiar código CSS
@@ -123,7 +222,7 @@
         </aside>
     </main>
 
-    <!-- JS -->
+    <!-- Lógica principal de la aplicación -->
     <script src="script.js"></script>
 </body>
 </html>

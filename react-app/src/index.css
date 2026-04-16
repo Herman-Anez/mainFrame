@@ -865,3 +865,5 @@ input[type="text"]:focus {
     .mode-btn { min-width: 45%; }
     .game-btn-group { grid-template-columns: 1fr; }
 }
+
+.wf-faded { opacity: 0.3; transition: opacity 0.3s ease; }
