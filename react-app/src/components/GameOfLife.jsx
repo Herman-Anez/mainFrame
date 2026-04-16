@@ -10,6 +10,23 @@ function buildGrid() {
     return new Array(COLS).fill(null).map(() => new Array(ROWS).fill(0)); 
 }
 
+/**
+ * COMPONENTE: GameOfLife (Autómata Celular de Conway)
+ * 
+ * Implementación matemática del Juego de la Vida parametrizado con herencia de color.
+ * 
+ * Detalles de Arquitectura:
+ * 1. Independencia de Frames (Throttling Diferencial): Corre intencionadamente lento
+ *    a 12 FPS para apreciación visual (estilo pixel art retro), mientras que el CSS del
+ *    padre corre sin restricciones (60+ FPS). Logrado mediante control estricto de `requestAnimationFrame`.
+ * 2. Bypass de React-DOM: El modelo de datos (`gridRef`) muta directamente en JavaScript nativo 
+ *    con una matriz bi-dimensional (Array 35x35) y pinta al canvas evadiendo el Ciclo de Vida de React.
+ * 3. Herencia Genética Cromática: Cuando una célula nace por 3 vecinos, absorbe el color de uno de 
+ *    sus progenitores, generando patrones orgánicos combinados.
+ * 
+ * @param {Array} nodes - Estado principal de colores usados para pintar y heredar genéticamente.
+ * @param {number} globalRotation - Offset de grados que cambian los pigmentos nacientes en vivo.
+ */
 export function GameOfLife({ nodes, globalRotation }) {
     const canvasRef = useRef(null);
     const gridRef = useRef(buildGrid());
@@ -111,24 +128,63 @@ export function GameOfLife({ nodes, globalRotation }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Controles manuales de pintura
-    const handleCanvasClick = (e) => {
+    // ═══════════════════════════════════════════════════════════════
+    // PINTURA CONTINUA: mousedown + mousemove + mouseup
+    //
+    // En la versión Vanilla, mantener el clic presionado y arrastrar
+    // sobre el canvas pintaba células en tiempo real. Aquí replicamos
+    // eso usando listeners nativos del DOM (no onClick de React)
+    // para evitar problemas de stale closure y mantener rendimiento.
+    // ═══════════════════════════════════════════════════════════════
+    const isPaintingRef = useRef(false);
+    const nodesRef = useRef(nodes);
+    useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+
+    useEffect(() => {
         const canvas = canvasRef.current;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const x = (e.clientX - rect.left) * scaleX;
-        const y = (e.clientY - rect.top) * scaleY;
-        
-        const col = Math.floor(x / RESOLUTION);
-        const row = Math.floor(y / RESOLUTION);
-        
-        if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
-            const nodeIndexToPaint = 0; 
-            gridRef.current[col][row] = gridRef.current[col][row] ? 0 : (nodeIndexToPaint + 1);
-            drawGrid(gridRef.current);
-        }
-    };
+        if (!canvas) return;
+
+        const getPos = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+            return {
+                col: Math.floor((clientX - rect.left) * scaleX / RESOLUTION),
+                row: Math.floor((clientY - rect.top) * scaleY / RESOLUTION)
+            };
+        };
+
+        const paintCell = (e) => {
+            const { col, row } = getPos(e);
+            if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
+                const nodeCount = nodesRef.current.length || 1;
+                gridRef.current[col][row] = Math.floor(Math.random() * nodeCount) + 1;
+                drawGrid(gridRef.current);
+            }
+        };
+
+        const onDown = (e) => { isPaintingRef.current = true; paintCell(e); };
+        const onMove = (e) => { if (isPaintingRef.current) paintCell(e); };
+        const onUp = () => { isPaintingRef.current = false; };
+
+        canvas.addEventListener('mousedown', onDown);
+        canvas.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(e); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onMove(e); }, { passive: false });
+        window.addEventListener('touchend', onUp);
+
+        return () => {
+            canvas.removeEventListener('mousedown', onDown);
+            canvas.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('touchend', onUp);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [drawGrid]);
 
     const randomize = () => {
         const newGrid = buildGrid();

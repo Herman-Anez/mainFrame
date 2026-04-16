@@ -1,6 +1,22 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { hslToHex } from '../utils/colorUtils';
 
+/**
+ * COMPONENTE: ColorWheel
+ * Canvas interactivo ultrarrápido que representa visualmente el modelo HSL espacial.
+ * 
+ * Optimizaciones Críticas:
+ * 1. Renderizado en Canvas Oculto (Offscreen Cache): Pinta el gradiente cónico complejo (360° de cálculos) 
+ *    SOLO UNA VEZ, para después redibujarlo trivialmente como imagen mediante `drawImage` en cada frame, 
+ *    desbloqueando la capacidad teórica de re-render a +144FPS.
+ * 2. Event Listeners Nativos + RAF: Elude por completo la reactividad de react `onMouseMove` usando listeners 
+ *    de DOM acoplados matemáticamente a la Queue del GPU a través de `requestAnimationFrame` (RAF).
+ * 
+ * @param {Array} nodes - Estado actual de color
+ * @param {number} globalRotation - Eje de desplazamiento visual
+ * @param {Function} onNodeUpdate - Orquestador lógico de subidas (Drilling up)
+ * @param {string} currentMode - Define modificadores del display GUI (por ej, líneas a trazos si no es Libre)
+ */
 export function ColorWheel({ nodes, globalRotation, onNodeUpdate, currentMode }) {
     const canvasRef = useRef(null);
     const bgCanvasRef = useRef(document.createElement('canvas'));

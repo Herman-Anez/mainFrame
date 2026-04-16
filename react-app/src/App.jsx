@@ -7,10 +7,23 @@ import { GameOfLife } from './components/GameOfLife';
 import { ControlsPanel } from './components/ControlsPanel';
 import { CssMapModal } from './components/CssMapModal';
 
+/**
+ * COMPONENTE PRINCIPAL (App)
+ * Actúa como el orquestador principal (God Component) de la aplicación.
+ * 
+ * Arquitectura:
+ * 1. Estado Global: Centraliza el estado de los nodos a través del hook `useColorState`.
+ * 2. Motor de Tema: Inyecta variables CSS al `body` mediante `useDynamicTheme`.
+ * 3. Presentación: Pasa estados y directivas como props a los componentes hijos
+ *    (ColorWheel, GameOfLife, ControlsPanel), logrando una alta modularidad.
+ */
 function App() {
+    // Estado para gestionar el modo del sistema (dark | light | free)
     const [themeMode, setThemeMode] = useState('dark');
+    // Estado para controlar la visibilidad del modal de variables CSS
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     
+    // Extracción de lógica compleja hacia Custom Hooks para un componente limpio
     const {
         nodes,
         currentMode,

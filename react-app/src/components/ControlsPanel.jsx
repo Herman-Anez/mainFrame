@@ -2,6 +2,20 @@ import { useRef, useCallback, useEffect } from 'react';
 import { hslToHex } from '../utils/colorUtils';
 import { PalettePreview } from './PalettePreview';
 
+/**
+ * COMPONENTE: ControlsPanel
+ * 
+ * Barra lateral de interfaces (Panel de Controles). Actúa casi exclusivamente
+ * como un "Presentational Component" (Componente Tonto/De Presentación) en la 
+ * arquitectura de React, recibiendo su estado y los callbacks de mutación 
+ * directamente desde el orquestador principal (App.jsx).
+ * 
+ * Funciones Principales:
+ * - Selección semántica de armonías (Tríada, Complementario, etc.).
+ * - Modificador de Offset Visual (Rotación 0-360 global).
+ * - Renderizado en lista de los nodos existentes con inputs específicos de 
+ *   control de luminosidad física y campos hexadecimales `readonly`.
+ */
 export function ControlsPanel({ 
     nodes, 
     currentMode, 

@@ -1,5 +1,20 @@
 import { useState, useCallback } from 'react';
 
+/**
+ * HOOK DE ESTADO GLOBAL DE COLORES (useColorState)
+ * 
+ * Actúa como la única fuente de la verdad (Single Source of Truth) para el modelo
+ * de datos de colores de toda la aplicación. Controla las reglas matemáticas de las 
+ * armonías (Tríada, Tetráda, etc.).
+ * 
+ * Estructura de un Nodo:
+ * {
+ *   id: number,          // Identificador único inmutable
+ *   baseAngle: number,   // HUE (Matiz puramente lógico, sin el offset global añadido) de 0 a 360
+ *   s: number,           // Saturación (0.0 a 1.0) mapeada al radio de la rueda en UI
+ *   l: number            // Luminosidad (0.0 a 1.0) mapeada al input range de claridad
+ * }
+ */
 export function useColorState() {
     const [nodes, setNodes] = useState([
         { id: Date.now(), baseAngle: 210, s: 1, l: 0.5 },

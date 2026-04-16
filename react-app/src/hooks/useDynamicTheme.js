@@ -1,6 +1,25 @@
 import { useLayoutEffect } from 'react';
 import { hslToHex, getTextColorForBackground } from '../utils/colorUtils';
 
+/**
+ * HOOK PRINCIPAL DEL MOTOR GRÁFICO CSS (useDynamicTheme)
+ * 
+ * Se encarga de traducir los datos lógicos de los nodos (H, S, L y Rotación) 
+ * a la paleta de colores final que conforma la interfaz (Glassmorphism dinámico).
+ * 
+ * ¿Por qué usamos `useLayoutEffect` en lugar de `useEffect`?
+ *   - `useEffect` se ejecuta DESPUÉS de que el navegador ha pintado la pantalla = Flash visual de estilos.
+ *   - `useLayoutEffect` se dispara bloqueando el pintado repintando el CSS justo ANTES 
+ *     de que el usuario vea el cuadro. Previene tirones visuales a 60FPS.
+ * 
+ * Mecánica de Especificidad CSS:
+ *   Las variables se inyectan como estilos inline en `document.body` (`body.style...`), 
+ *   lo cual otorga máxima prioridad (Specificity: 1,0,0,0) sobrecargando las clases :root y .dark-mode.
+ * 
+ * @param {Array}  nodes - Lista de nodos de color activos { baseAngle, s, l }.
+ * @param {number} globalRotation - Offset de grados a sumar a los ángulos base (0-360).
+ * @param {string} themeMode - Selector estricto de control de jerarquía de temas ('light', 'dark', 'free').
+ */
 export function useDynamicTheme(nodes, globalRotation, themeMode) {
     useLayoutEffect(() => {
         const body = document.body;

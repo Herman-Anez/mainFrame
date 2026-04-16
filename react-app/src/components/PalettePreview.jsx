@@ -1,6 +1,21 @@
 import { useState, useMemo } from 'react';
 import { hslToHex } from '../utils/colorUtils';
 
+/**
+ * COMPONENTE: PalettePreview
+ * 
+ * Interfaz de utilidad (Herramienta de Desarrollador) que extrapola los Nodos de Color Base
+ * a una escala de luminosidades completa (Pesos 100 a 900), imitando convenciones como 
+ * Tailwind CSS o Material Design Settings.
+ * 
+ * Funcionalidad Técnica:
+ * - Usa `useMemo` para recalcular el string masivo de CSS en texto crudo solo cuando sea 
+ *   estrictamente necesario, evitando regeneración innecesaria de strings en cada click/drag.
+ * - Ofrece UX de "Click to Copy" nativa mediante la API del portapapeles (navigator.clipboard).
+ * 
+ * @param {Array} nodes - Estado lógico de cores.
+ * @param {number} globalRotation - Eje numérico global de Hue.
+ */
 export function PalettePreview({ nodes, globalRotation }) {
     const [copiedContent, setCopiedContent] = useState('');
 

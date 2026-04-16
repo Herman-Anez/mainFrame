@@ -6,7 +6,19 @@ Ctrl + Shift + x extencions
 
 Ctrl + alt + z extencions
 
-```json
+```Json
+///locales
+{
+  "key": "ctrl+k ctrl+[Comma]",
+  "command": "editor.createFoldingRangeFromSelection",
+  "when": "editorTextFocus && foldingEnabled"
+},
+{
+  "key": "ctrl+k ctrl+[Period]",
+  "command": "editor.removeManualFoldingRanges",
+  "when": "editorTextFocus && foldingEnabled"
+}
+///////// personales
 {
   "key": "alt+w alt+w",
   "command": "editor.action.toggleRenderWhitespace"
