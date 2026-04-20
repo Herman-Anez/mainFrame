@@ -2,15 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Círculo Cromático · Control de Saturación Radial (Límite de Nodos)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Círculo Cromático · Saturación Radial Controlada (Optimizado)</title>
     <style>
-        /* ---------- ESTILOS BASE: FONDO NEUTRO Y CENTRADO ---------- */
-        * {
-            box-sizing: border-box;
-            user-select: none; /* Evita selección accidental de textos en la interfaz */
-        }
-
+        /* Mantenemos los mismos estilos corregidos que ya funcionan bien */
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             background: #e2e8f0;
@@ -19,52 +15,48 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 24px;
+            padding: 20px;
         }
-
-        /* Tarjeta principal: dos columnas responsivas */
         .container {
             background: #ffffff;
             border-radius: 2rem;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
             padding: 1.5rem;
             display: flex;
             gap: 2rem;
             flex-wrap: wrap;
+            height: 805px ;
             justify-content: center;
-            backdrop-filter: blur(0px);
-            transition: all 0.2s;
+            max-width: 1200px;
+            width: 100%;
         }
-
         .canvas-area {
             text-align: center;
+            flex: 1;
+            min-width: 260px;
         }
-
         canvas {
             display: block;
             margin: 0 auto;
             border-radius: 18px;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
             cursor: crosshair;
-            transition: transform 0.1s ease;
+            width: auto;
+            max-width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
         }
-
-        canvas:active {
-            transform: scale(0.99);
-        }
-
-        /* Panel lateral moderno */
         .info-panel {
-            width: 280px;
+            width: 300px;
             background: #fefefe;
             border-radius: 1.5rem;
             padding: 1.2rem;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
             border: 1px solid #eef2f6;
         }
-
         .info-panel h3 {
             margin-top: 0;
+            margin-bottom: 1rem;
             text-align: center;
             font-weight: 600;
             color: #1e293b;
@@ -72,41 +64,35 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            font-size: 1.2rem;
         }
-
-        /* Bloque del color bajo el cursor */
         .cursor-color {
             background: #f1f5f9;
             border-radius: 1rem;
             padding: 0.8rem;
             margin-bottom: 1.5rem;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             text-align: center;
-            transition: background 0.1s;
         }
-
         .cursor-color span {
             font-weight: 700;
             font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
         }
-
         .rgb-badge {
             background: #cbd5e1;
-            padding: 0.2rem 0.5rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 2rem;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+            display: inline-block;
         }
-
         #cursorPreview {
             width: 100%;
-            height: 28px;
+            height: 32px;
             border-radius: 40px;
             margin-top: 8px;
             border: 1px solid #cbd5e1;
-            transition: 0.05s linear;
         }
-
-        /* CONTROL DESLIZANTE (SATURACIÓN = RADIO MÁXIMO DE NODOS) */
         .radius-control {
             background: #f8fafc;
             border-radius: 1rem;
@@ -114,34 +100,28 @@
             margin-bottom: 1.2rem;
             border: 1px solid #e2e8f0;
         }
-
         .radius-control label {
-            font-weight: 600;
-            font-size: 0.85rem;
+            font-weight: 700;
+            font-size: 0.9rem;
             color: #0f172a;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.6rem;
+            align-items: center;
+            margin-bottom: 0.5rem;
         }
-
         input[type="range"] {
             width: 100%;
-            height: 5px;
+            height: 6px;
             -webkit-appearance: none;
             background: linear-gradient(90deg, #3b82f6, #f97316);
             border-radius: 10px;
             outline: none;
             margin: 12px 0;
         }
-
-        input[type="range"]:focus {
-            outline: none;
-        }
-
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             background: white;
             border-radius: 50%;
             border: 2px solid #f97316;
@@ -149,123 +129,101 @@
             cursor: pointer;
             transition: 0.1s;
         }
-
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-            background: #f97316;
-        }
-
         .radius-value {
             font-family: monospace;
             background: #1e293b;
             color: white;
-            padding: 0.2rem 0.6rem;
+            padding: 0.2rem 0.7rem;
             border-radius: 40px;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
         }
-
         .info-text {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #334155;
             text-align: center;
-            margin-top: 6px;
+            margin-top: 8px;
             background: #eef2ff;
-            padding: 4px 8px;
+            padding: 6px 8px;
             border-radius: 28px;
         }
-
-        /* Lista de nodos */
         .nodes-list {
-            max-height: 260px;
+            max-height: 280px;
             overflow-y: auto;
             margin: 1rem 0;
             border-radius: 1rem;
+            background: #fcfcfc;
+            padding: 0 2px;
         }
-
         .node-item {
             background: white;
             border-left: 4px solid;
             border-radius: 12px;
-            padding: 0.5rem 0.7rem;
-            margin-bottom: 0.6rem;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.7rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: 0.08s linear;
         }
-
         .node-item:hover {
             background: #fff7e5;
-            transform: translateX(2px);
+            transform: translateX(3px);
         }
-
         .node-info {
-            font-family: monospace;
+            font-family: 'Fira Code', monospace;
             font-size: 0.7rem;
-            line-height: 1.3;
+            line-height: 1.4;
         }
-
         .delete-btn {
             background: #ef4444;
             border: none;
             color: white;
             border-radius: 30px;
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             cursor: pointer;
             font-weight: bold;
-            transition: 0.15s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
-
-        .delete-btn:hover {
-            background: #b91c1c;
-            transform: scale(1.04);
-        }
-
         button.clear-btn {
             background: #475569;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 40px;
             cursor: pointer;
             width: 100%;
             font-weight: 600;
             margin-top: 0.5rem;
-            transition: 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
         }
-
-        button.clear-btn:hover {
-            background: #1e293b;
-        }
-
         .footer-note {
             font-size: 0.7rem;
             text-align: center;
             margin-top: 1rem;
-            color: #5b6e8c;
+            color: #475569;
             background: #f1f5f9;
-            padding: 6px;
+            padding: 8px;
             border-radius: 28px;
         }
-
         .limit-badge {
             background: #ffedd5;
             font-size: 0.7rem;
             border-radius: 20px;
-            padding: 4px 8px;
+            padding: 6px 8px;
             text-align: center;
-            margin-top: 8px;
+            margin-top: 10px;
             color: #9a3412;
+        }
+        @media (max-width: 700px) {
+            .container { padding: 1rem; gap: 1.2rem; }
+            .info-panel { width: 100%; max-width: 360px; }
         }
     </style>
 </head>
@@ -274,24 +232,20 @@
     <div class="canvas-area">
         <canvas id="colorWheel" width="500" height="500"></canvas>
         <div class="footer-note">
-            🎯 Clic dentro del <strong>círculo límite activo</strong> → agregar nodo<br>
+            🎯 Clic dentro del <strong>círculo naranja punteado</strong> → agregar nodo<br>
             📐 Saturación radial: centro 0% → borde 100%<br>
-            🔘 Círculo <span style="color:#f97316; font-weight:bold;">naranja punteado</span> = radio máximo actual de nodos
+            🔘 Círculo <span style="color:#f97316; font-weight:bold;">naranja discontinuo</span> = límite de saturación actual
         </div>
     </div>
     <div class="info-panel">
         <h3>🎨 Nodos · Saturación controlada</h3>
-
-        <!-- Panel de color bajo cursor -->
         <div class="cursor-color">
             🖱️ Color bajo el cursor<br>
             <span id="cursorCoords">(---, ---)</span> → 
             <span id="cursorRgb" class="rgb-badge">RGB(--,--,-)</span>
-            <div id="cursorPreview" style="background:#ccc;"></div>
-            <div id="cursorLimitMsg" style="font-size: 10px; margin-top: 5px; color:#ea580c;"></div>
+            <div id="cursorPreview"></div>
+            <div id="cursorLimitMsg" style="font-size: 11px; margin-top: 6px; font-weight: 500;"></div>
         </div>
-
-        <!-- BARRA DE CONTROL: SATURACIÓN / RADIO MÁXIMO DE NODOS -->
         <div class="radius-control">
             <label>
                 ⚡ Límite de saturación (radio de nodos)
@@ -306,39 +260,31 @@
                 📍 Radio efectivo: 100% (máximo)
             </div>
         </div>
-
-        <!-- Lista dinámica de nodos -->
         <div id="nodesContainer" class="nodes-list">
             <div style="text-align:center; color:#94a3b8;">✨ Haz clic dentro del círculo naranja</div>
         </div>
-
-        <!-- Botón limpiar -->
         <button id="clearNodesBtn" class="clear-btn">🗑️ Limpiar todos los nodos</button>
     </div>
 </div>
 
 <script>
-    // =========================================================================
-    // 1. CONFIGURACIÓN DEL CANVAS Y PARÁMETROS GLOBALES
-    // =========================================================================
+    // ==================== 1. CONFIGURACIÓN ====================
     const canvas = document.getElementById('colorWheel');
     const ctx = canvas.getContext('2d');
     const w = canvas.width = 500;
     const h = canvas.height = 500;
-    const cx = w / 2;          // centro X = 250
-    const cy = h / 2;          // centro Y = 250
-    const radiusTotal = w * 0.45;   // 225 píxeles (borde físico del círculo cromático)
+    const cx = w / 2;
+    const cy = h / 2;
+    const radiusTotal = w * 0.45;   // 225px
 
-    // Array de nodos: cada nodo = { x, y, r, g, b }
     let nodes = [];
+    let effectiveRadiusPercent = 100;
+    let effectiveRadius = radiusTotal;
 
-    // ----- CONTROL DE RADIO EFECTIVO (SATURACIÓN MÁXIMA DE NODOS) -----
-    let effectiveRadiusPercent = 100;     // valor inicial 100%
-    let effectiveRadius = radiusTotal;     // radio límite actual (en píxeles)
+    // --- Buffer para el fondo estático (círculo cromático) ---
+    let backgroundImageData = null;
 
-    // =========================================================================
-    // 2. FUNCIÓN HSL → RGB (idéntica a la original, para la rueda cromática)
-    // =========================================================================
+    // ==================== 2. FUNCIÓN HSL → RGB ====================
     function hslToRgb(h, s, l) {
         h = (h % 360) / 360;
         s = s / 100;
@@ -364,48 +310,39 @@
         return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
 
-    // =========================================================================
-    // 3. DIBUJO DEL CÍRCULO CROMÁTICO (SATURACIÓN RADIAL COMPLETA)
-    // =========================================================================
-    function drawColorWheel() {
+    // ==================== 3. DIBUJO DEL CÍRCULO CROMÁTICO (una sola vez) ====================
+    function drawStaticBackground() {
         const imageData = ctx.getImageData(0, 0, w, h);
         const data = imageData.data;
-
         for (let yFis = 0; yFis < h; yFis++) {
             for (let xFis = 0; xFis < w; xFis++) {
-                // Coordenadas lógicas (origen abajo-izquierda)
                 const xLog = xFis;
                 const yLog = h - 1 - yFis;
                 const dx = xLog - cx;
                 const dy = yLog - cy;
                 const distance = Math.hypot(dx, dy);
                 const idx = (yFis * w + xFis) * 4;
-
                 if (distance <= radiusTotal) {
-                    // Ángulo para el matiz
                     let angle = Math.atan2(dy, dx);
                     let hue = (angle * 180 / Math.PI + 360) % 360;
-                    // Saturación radial: 0% centro, 100% borde
                     const t = distance / radiusTotal;
                     const saturation = t * 100;
-                    const lightness = 50;   // Luminosidad fija al 50% para colores vivos
-                    const [r, g, b] = hslToRgb(hue, saturation, lightness);
+                    const [r, g, b] = hslToRgb(hue, saturation, 50);
                     data[idx] = r;
                     data[idx+1] = g;
                     data[idx+2] = b;
                     data[idx+3] = 255;
                 } else {
-                    // Fuera del círculo: transparente
-                    data[idx] = 0;
-                    data[idx+1] = 0;
-                    data[idx+2] = 0;
+                    data[idx] = data[idx+1] = data[idx+2] = 0;
                     data[idx+3] = 0;
                 }
             }
         }
         ctx.putImageData(imageData, 0, 0);
-
-        // Borde exterior del círculo cromático (negro sutil)
+        // Guardamos una copia del fondo (sin bordes ni nodos)
+        backgroundImageData = ctx.getImageData(0, 0, w, h);
+        
+        // Dibujamos el borde exterior (se añade al fondo estático)
         ctx.save();
         ctx.translate(0, h);
         ctx.scale(1, -1);
@@ -415,48 +352,21 @@
         ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.restore();
+        
+        // Actualizamos el buffer incluyendo el borde
+        backgroundImageData = ctx.getImageData(0, 0, w, h);
     }
 
-    // =========================================================================
-    // 4. DIBUJO DEL CÍRCULO LÍMITE (RADIO EFECTIVO) → muestra restricción de saturación
-    // =========================================================================
-    function drawEffectiveRadiusLimit() {
-        if (effectiveRadius <= 0) return; // radio cero no dibuja nada
-        ctx.save();
-        ctx.translate(0, h);
-        ctx.scale(1, -1);
-        ctx.beginPath();
-        ctx.arc(cx, cy, effectiveRadius, 0, Math.PI * 2);
-        // Estilo llamativo: línea discontinua naranja/roja para indicar límite
-        ctx.setLineDash([8, 8]);
-        ctx.lineWidth = 2.8;
-        ctx.strokeStyle = '#f97316';   // naranja intenso
-        ctx.stroke();
-        // segundo contorno más fino blanco para contraste
-        ctx.beginPath();
-        ctx.arc(cx, cy, effectiveRadius, 0, Math.PI * 2);
-        ctx.setLineDash([8, 10]);
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = '#ffffff';
-        ctx.stroke();
-        // Restaurar dash
-        ctx.setLineDash([]);
-        ctx.restore();
-
-        // Opcional: texto indicador de radio (pequeño)
-        ctx.save();
-        ctx.font = "bold 11px 'Segoe UI'";
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = "#f97316";
-        ctx.shadowColor = "white";
-        ctx.shadowBlur = 2;
-        ctx.fillText(`⛔ límite ${effectiveRadiusPercent}%`, cx + effectiveRadius - 38, cy - effectiveRadius + 12);
-        ctx.restore();
+    // ==================== 4. REFRESCO RÁPIDO (solo nodos + límite) ====================
+    function refreshCanvas() {
+        // Restaurar fondo estático (círculo + borde)
+        ctx.putImageData(backgroundImageData, 0, 0);
+        // Dibujar nodos y círculo límite encima
+        drawNodes();
+        drawEffectiveRadiusLimit();
     }
 
-    // =========================================================================
-    // 5. DIBUJO DE LOS NODOS (círculos con color y doble borde)
-    // =========================================================================
+    // ==================== 5. DIBUJO DE NODOS ====================
     function drawNodes() {
         ctx.save();
         ctx.translate(0, h);
@@ -478,18 +388,36 @@
         ctx.restore();
     }
 
-    // =========================================================================
-    // 6. REFRESCO TOTAL DEL CANVAS (rueda + límite + nodos)
-    // =========================================================================
-    function refreshCanvas() {
-        drawColorWheel();          // fondo cromático
-        drawNodes();              // nodos por encima
-        drawEffectiveRadiusLimit(); // círculo de límite visible encima (para destacar restricción)
+    // ==================== 6. CÍRCULO LÍMITE (discontinuo) ====================
+    function drawEffectiveRadiusLimit() {
+        if (effectiveRadius <= 0) return;
+        ctx.save();
+        ctx.translate(0, h);
+        ctx.scale(1, -1);
+        ctx.beginPath();
+        ctx.arc(cx, cy, effectiveRadius, 0, Math.PI * 2);
+        ctx.setLineDash([8, 8]);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#f97316';
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, effectiveRadius, 0, Math.PI * 2);
+        ctx.setLineDash([8, 10]);
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+        // Texto indicador
+        ctx.save();
+        ctx.font = "bold 12px 'Segoe UI'";
+        ctx.fillStyle = "#f97316";
+        ctx.shadowBlur = 0;
+        ctx.fillText(`⛔ ${effectiveRadiusPercent}%`, cx + effectiveRadius - 42, cy - effectiveRadius + 14);
+        ctx.restore();
     }
 
-    // =========================================================================
-    // 7. CONVERSIÓN DE COORDENADAS RATÓN → LÓGICAS (origen abajo-izquierda)
-    // =========================================================================
+    // ==================== 7. UTILIDADES ====================
     function mouseToLogical(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -498,14 +426,9 @@
         let fisY = (clientY - rect.top) * scaleY;
         fisX = Math.min(Math.max(0, fisX), w - 1);
         fisY = Math.min(Math.max(0, fisY), h - 1);
-        const logX = fisX;
-        const logY = h - 1 - fisY;
-        return { x: logX, y: logY };
+        return { x: fisX, y: h - 1 - fisY };
     }
 
-    // =========================================================================
-    // 8. OBTENER COLOR DE UN PÍXEL EN COORDENADAS LÓGICAS (del canvas actual)
-    // =========================================================================
     function getColorAtLogical(x, y) {
         const fisX = x;
         const fisY = h - 1 - y;
@@ -514,80 +437,50 @@
         return { r: pixel[0], g: pixel[1], b: pixel[2], a: pixel[3] };
     }
 
-    // =========================================================================
-    // 9. VERIFICACIÓN DE RADIO EFECTIVO (restricción principal por saturación)
-    // =========================================================================
-    function isInsideEffectiveRadius(x, y) {
-        const dx = x - cx;
-        const dy = y - cy;
-        const dist = Math.hypot(dx, dy);
-        return dist <= effectiveRadius;
-    }
-
-    // También comprobar si está dentro del círculo cromático total (para información visual)
     function isInsideFullCircle(x, y) {
-        const dx = x - cx;
-        const dy = y - cy;
-        return Math.hypot(dx, dy) <= radiusTotal;
+        return Math.hypot(x - cx, y - cy) <= radiusTotal;
+    }
+    function isInsideEffectiveRadius(x, y) {
+        return Math.hypot(x - cx, y - cy) <= effectiveRadius;
     }
 
-    // =========================================================================
-    // 10. AGREGAR NODO (SOLO si está dentro del radio efectivo y dentro del círculo)
-    // =========================================================================
+    // ==================== 8. AGREGAR NODO ====================
     function addNodeAtLogical(x, y) {
-        // Verificar que está dentro del círculo cromático completo (por coherencia)
-        if (!isInsideFullCircle(x, y)) {
-            return false;
-        }
-        // Validación ESTRELLA: SOLO se puede agregar si está dentro del radio límite (saturación controlada)
+        if (!isInsideFullCircle(x, y)) return false;
         if (!isInsideEffectiveRadius(x, y)) {
-            // Mostrar feedback visual (opcional) con mensaje en el panel durante 1 segundo
             const msgDiv = document.getElementById('cursorLimitMsg');
             if (msgDiv) {
-                msgDiv.innerText = "⛔ Fuera del límite de saturación actual. Ajusta la barra o haz clic más cerca del centro.";
-                setTimeout(() => {
-                    if (msgDiv.innerText.includes("Fuera del límite")) msgDiv.innerText = "";
-                }, 1500);
+                msgDiv.innerText = "⛔ Fuera del límite de saturación actual";
+                setTimeout(() => { if (msgDiv.innerText.includes("Fuera")) msgDiv.innerText = ""; }, 1200);
             }
             return false;
         }
-
         const color = getColorAtLogical(x, y);
         if (!color || color.a === 0) return false;
         nodes.push({ x, y, r: color.r, g: color.g, b: color.b });
-        refreshCanvas();          // redibuja todo incluyendo límite
-        updateNodeList();        // actualiza lista HTML
+        refreshCanvas();
+        updateNodeList();
         return true;
     }
 
-    // =========================================================================
-    // 11. FILTRAR NODOS QUE QUEDEN FUERA DEL RADIO EFECTIVO (cuando se reduce el límite)
-    // =========================================================================
+    // ==================== 9. FILTRAR NODOS (al cambiar radio) ====================
     function filterNodesByCurrentRadius() {
-        const beforeCount = nodes.length;
-        nodes = nodes.filter(node => {
-            const dx = node.x - cx;
-            const dy = node.y - cy;
-            const dist = Math.hypot(dx, dy);
-            return dist <= effectiveRadius;
-        });
-        if (nodes.length !== beforeCount) {
-            // si se eliminaron nodos, refrescamos lista y canvas
+        const before = nodes.length;
+        nodes = nodes.filter(node => Math.hypot(node.x - cx, node.y - cy) <= effectiveRadius);
+        if (nodes.length !== before) {
             refreshCanvas();
             updateNodeList();
-            // Mostrar pequeño aviso en el límite badge
-            const hintDiv = document.getElementById('radiusHint');
-            if (hintDiv && beforeCount !== nodes.length) {
-                hintDiv.style.transition = "0.2s";
-                hintDiv.style.backgroundColor = "#fed7aa";
-                setTimeout(() => { hintDiv.style.backgroundColor = ""; }, 500);
+            const hint = document.getElementById('radiusHint');
+            if (hint) {
+                hint.style.backgroundColor = "#fed7aa";
+                setTimeout(() => { hint.style.backgroundColor = ""; }, 400);
             }
+        } else {
+            refreshCanvas();
         }
     }
 
-    // =========================================================================
-    // 12. ACTUALIZAR LA LISTA HTML DE NODOS (con botones eliminar)
-    // =========================================================================
+    // ==================== 10. LISTA DE NODOS (HTML) ====================
     function updateNodeList() {
         const container = document.getElementById('nodesContainer');
         if (nodes.length === 0) {
@@ -607,14 +500,12 @@
             `;
         });
         container.innerHTML = html;
-
-        // Asignar eventos de eliminación individual
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const index = parseInt(btn.getAttribute('data-index'));
-                if (!isNaN(index) && index >= 0 && index < nodes.length) {
-                    nodes.splice(index, 1);
+                const idx = parseInt(btn.getAttribute('data-index'));
+                if (!isNaN(idx) && idx >= 0 && idx < nodes.length) {
+                    nodes.splice(idx, 1);
                     refreshCanvas();
                     updateNodeList();
                 }
@@ -622,64 +513,46 @@
         });
     }
 
-    // =========================================================================
-    // 13. LIMPIAR TODOS LOS NODOS
-    // =========================================================================
     function clearAllNodes() {
         nodes = [];
         refreshCanvas();
         updateNodeList();
     }
 
-    // =========================================================================
-    // 14. CONTROL DESLIZANTE: actualiza el radio efectivo (saturación máxima)
-    // =========================================================================
+    // ==================== 11. SLIDER ====================
     function setupRadiusSlider() {
         const slider = document.getElementById('radiusSlider');
         const percentLabel = document.getElementById('radiusPercentLabel');
         const hintDiv = document.getElementById('radiusHint');
-
-        function updateRadius() {
+        function update() {
             const percent = parseInt(slider.value, 10);
             effectiveRadiusPercent = percent;
             effectiveRadius = radiusTotal * (percent / 100);
             percentLabel.innerText = `${percent}%`;
             hintDiv.innerHTML = `📍 Radio efectivo: ${percent}% del total (saturación máxima ${percent}%)`;
-            
-            // CRUCIAL: al reducir el radio, eliminamos nodos que queden fuera del nuevo límite
-            filterNodesByCurrentRadius();   // elimina nodos fuera de zona permitida
-            refreshCanvas();                // redibuja con nuevo círculo límite y nodos filtrados
+            filterNodesByCurrentRadius();  // refresca y filtra
         }
-        slider.addEventListener('input', updateRadius);
-        updateRadius(); // sincroniza estado inicial
+        slider.addEventListener('input', update);
+        update();
     }
 
-    // =========================================================================
-    // 15. SEGUIMIENTO DEL CURSOR (muestra color en tiempo real + si está dentro del radio límite)
-    // =========================================================================
+    // ==================== 12. SEGUIMIENTO DEL CURSOR ====================
     function setupCursorTracker() {
         const coordsSpan = document.getElementById('cursorCoords');
         const rgbSpan = document.getElementById('cursorRgb');
         const previewDiv = document.getElementById('cursorPreview');
         const limitMsgSpan = document.getElementById('cursorLimitMsg');
-
         canvas.addEventListener('mousemove', (e) => {
             const logical = mouseToLogical(e.clientX, e.clientY);
             coordsSpan.innerText = `(${Math.round(logical.x)}, ${Math.round(logical.y)})`;
-            
             const insideFull = isInsideFullCircle(logical.x, logical.y);
             const insideLimit = isInsideEffectiveRadius(logical.x, logical.y);
-            
             if (insideFull) {
                 const color = getColorAtLogical(logical.x, logical.y);
-                if (color && color.a !== 0) {
+                if (color) {
                     rgbSpan.innerText = `rgb(${color.r}, ${color.g}, ${color.b})`;
                     previewDiv.style.backgroundColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
-                } else {
-                    rgbSpan.innerText = 'fuera del círculo';
-                    previewDiv.style.backgroundColor = '#ccc';
                 }
-                // Mostrar si está dentro del radio límite o no (feedback clave)
                 if (!insideLimit && effectiveRadiusPercent < 100) {
                     limitMsgSpan.innerHTML = '⚠️ Fuera del límite activo → no se puede agregar nodo';
                     limitMsgSpan.style.color = '#ea580c';
@@ -690,7 +563,6 @@
                     limitMsgSpan.innerHTML = '⚪ Fuera del círculo cromático';
                     limitMsgSpan.style.color = '#6b7280';
                 }
-                // Si el radio efectivo es 100%, todos los puntos dentro son válidos
                 if (effectiveRadiusPercent === 100 && insideFull) {
                     limitMsgSpan.innerHTML = '✓ Límite completo → clic para agregar';
                     limitMsgSpan.style.color = '#15803d';
@@ -704,40 +576,23 @@
         });
     }
 
-    // =========================================================================
-    // 16. EVENTO DE CLIC PARA AGREGAR NODOS (con restricción del radio efectivo)
-    // =========================================================================
     function setupClickToAddNode() {
         canvas.addEventListener('click', (e) => {
             const logical = mouseToLogical(e.clientX, e.clientY);
-            const added = addNodeAtLogical(logical.x, logical.y);
-            if (!added) {
-                // Si falla por radio límite, ya hay mensaje en el tracker, 
-                // pero adicional se puede notificar sutilmente
-                const msgDiv = document.getElementById('cursorLimitMsg');
-                if (msgDiv && !isInsideEffectiveRadius(logical.x, logical.y) && isInsideFullCircle(logical.x, logical.y)) {
-                    msgDiv.innerText = "⛔ Límite de saturación activo. Aumenta el slider o acerca el punto al centro.";
-                    setTimeout(() => {
-                        if (msgDiv.innerText.includes("Límite de saturación")) msgDiv.innerText = "";
-                    }, 1200);
-                }
-            }
+            addNodeAtLogical(logical.x, logical.y);
         });
     }
 
-    // =========================================================================
-    // 17. INICIALIZACIÓN COMPLETA
-    // =========================================================================
+    // ==================== 13. INICIALIZACIÓN ====================
     function init() {
-        drawColorWheel();            // fondo inicial
-        setupRadiusSlider();         // control deslizante (afecta radio efectivo y filtrado)
-        setupCursorTracker();        // previsualización de color y restricción
-        setupClickToAddNode();       // creación de nodos con límite
+        drawStaticBackground();      // fondo pesado una sola vez
+        setupRadiusSlider();
+        setupCursorTracker();
+        setupClickToAddNode();
         document.getElementById('clearNodesBtn').addEventListener('click', clearAllNodes);
-        updateNodeList();            // lista vacía
-        refreshCanvas();             // dibujo final con límite visible
+        updateNodeList();
+        refreshCanvas();            // muestra el fondo + nodos (vacío) + límite
     }
-
     init();
 </script>
 </body>
