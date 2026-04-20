@@ -1,547 +1,409 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Círculo Cromático + Juego de la Vida</title>
+    <title>Círculo Cromático - Saturación radial</title>
     <style>
-        /* =========================================
-           1. VARIABLES CSS (TEMAS)
-           ========================================= */
-        :root {
-            --bg-color: #f0f2f5;
-            --panel-bg: white;
-            --text-color: #333333;
-            --input-bg: white;
-            --input-border: #cccccc;
-            --btn-bg: #e0e0e0;
-            --btn-text: #333333;
-            --btn-hover: #d0d0d0;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-            --canvas-shadow: rgba(0, 0, 0, 0.2);
-            --accent-color: #4CAF50;
-            --grid-bg: #ffffff;
-        }
-
-        body.dark-mode {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --input-bg: #2d2d2d;
-            --input-border: #444444;
-            --btn-bg: #333333;
-            --btn-text: #e0e0e0;
-            --btn-hover: #444444;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --canvas-shadow: rgba(0, 0, 0, 0.6);
-            --accent-color: #45a049;
-            --grid-bg: #121212;
-        }
-
-        /* =========================================
-           2. ESTRUCTURA (LAYOUT)
-           ========================================= */
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f0f0;
             display: flex;
-            flex-direction: row;
             justify-content: center;
-            align-items: flex-start;
-            background: var(--bg-color);
-            color: var(--text-color);
-            transition: background 0.6s ease, color 0.6s ease;
-            margin: 0;
-            padding: 40px 20px;
+            align-items: center;
             min-height: 100vh;
-            box-sizing: border-box;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        /* Botones superiores */
-        .top-bar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 100;
-        }
-
-        .top-btn {
-            padding: 8px 15px;
-            font-size: 14px;
-            border-radius: 20px;
-            border: 1px solid var(--input-border);
-            background: var(--panel-bg);
-            color: var(--text-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px var(--shadow-color);
-            font-weight: bold;
-        }
-
-        .top-btn:hover {
-            background: var(--btn-hover);
-            filter: brightness(1.1);
-        }
-
-        #applyThemeBtn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-        }
-
-        /* Contenedores de Canvas */
-        .canvas-section {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            align-items: center;
-            width: 100%;
-            max-width: 350px;
-        }
-
-        canvas {
-            border-radius: 8px;
-            box-shadow: 0 4px 15px var(--canvas-shadow);
-            background: var(--panel-bg);
-            max-width: 100%;
-            height: auto;
-            aspect-ratio: 1 / 1;
-            transition: background 0.6s ease;
-        }
-
-        #wheel {
-            border-radius: 50%;
-        }
-
-        .game-btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-            width: 100%;
-        }
-
-        .game-btn-group button {
-            font-size: 13px;
-            padding: 8px 4px;
-            white-space: nowrap;
-        }
-
-        /* Controles Derecho */
-        .controls {
-            background: var(--panel-bg);
+            margin: 0;
             padding: 20px;
-            border-radius: 8px;
-            width: 400px;
-            box-shadow: 0 2px 10px var(--shadow-color);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-width: 100%;
-            box-sizing: border-box;
-            transition: background 0.6s ease, box-shadow 0.6s ease;
         }
-
-        .modes-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .active {
-            background: var(--text-color) !important;
-            color: var(--panel-bg) !important;
-        }
-
-        .node-item {
-            display: grid;
-            grid-template-columns: 40px 40px 1fr auto;
-            align-items: center;
-            gap: 8px;
-        }
-
-        input[type="color"] {
-            width: 100%;
-            height: 35px;
-            cursor: pointer;
-            border-radius: 4px;
-            border: 1px solid var(--input-border);
-            padding: 0;
-            -webkit-appearance: none;
-            overflow: hidden;
-            box-sizing: border-box;
-        }
-
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
-        }
-
-        input[type="color"]::-webkit-color-swatch {
-            border: none;
-            border-radius: 3px;
-        }
-
-        input[type="text"],
-        input[type="range"] {
-            box-sizing: border-box;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            font-family: monospace;
-            border: 1px solid var(--input-border);
-            border-radius: 4px;
-            background: var(--input-bg);
-            color: var(--text-color);
-            transition: background 0.6s ease, color 0.6s ease;
-        }
-
-        button {
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            border: 1px solid var(--input-border);
-            background: var(--btn-bg);
-            color: var(--btn-text);
-            transition: background 0.3s ease;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: var(--btn-hover);
-            filter: brightness(0.9);
-        }
-
-        #exportBtn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            width: 100%;
-            transition: background 0.6s ease;
-        }
-
-        #exportBtn:hover {
-            filter: brightness(1.1);
-        }
-
-        #palettePreview {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-            border-radius: 4px;
-            overflow: hidden;
-            flex-wrap: wrap;
-        }
-
-        .color-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 60px;
-        }
-
-        .color-swatch {
-            height: 30px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-shadow: 0 1px 2px black;
-            cursor: pointer;
-        }
-
-        /* Estilos del Modal */
-        #cssMapModal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        #cssMapModal.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background: var(--panel-bg);
-            color: var(--text-color);
-            padding: 30px;
-            border-radius: 12px;
-            width: 800px;
-            max-width: 95vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 20px;
             display: flex;
             gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-color);
-            padding: 0;
-            line-height: 1;
+        .canvas-area {
+            text-align: center;
         }
-
-        .map-controls {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: crosshair;
         }
-
-        .map-var-btn {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
+        .info-panel {
+            width: 260px;
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .info-panel h3 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+        }
+        .cursor-color {
+            background: #e9e9e9;
+            border-radius: 12px;
             padding: 10px;
-            text-align: left;
-            border-radius: 6px;
-            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .cursor-color span {
+            font-weight: bold;
             font-family: monospace;
-            transition: all 0.2s;
+        }
+        .nodes-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        .node-item {
+            background: white;
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: 0.1s;
         }
-
-        .map-var-btn:hover {
-            border-color: var(--accent-color);
-            transform: translateX(5px);
+        .node-item:hover {
+            transform: translateX(3px);
+            background: #fff9e0;
         }
-
-        .map-wireframe {
-            flex: 1.5;
-            background: var(--bg-color);
-            border: 2px dashed var(--input-border);
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            position: relative;
-            transition: background 0.3s ease;
+        .node-info {
+            font-family: monospace;
+            font-size: 11px;
         }
-
-        .wf-element {
-            transition: all 0.3s ease;
-            position: relative;
+        .delete-btn {
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            border-radius: 20px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
         }
-
-        .highlight-bg {
-            box-shadow: inset 0 0 0 4px #ff0055, 0 0 20px rgba(255, 0, 85, 0.4);
+        .delete-btn:hover {
+            background: #cc0000;
+            transform: scale(1.05);
         }
-
-        .highlight-panel {
-            box-shadow: inset 0 0 0 4px #00aaff, 0 0 20px rgba(0, 170, 255, 0.4);
-        }
-
-        .highlight-text {
-            text-shadow: 0 0 5px #00ffaa, 0 0 10px #00ffaa;
-            color: #00ffaa !important;
-        }
-
-        .highlight-inputBg {
-            box-shadow: inset 0 0 0 4px #ffaa00, 0 0 20px rgba(255, 170, 0, 0.4);
-        }
-
-        .highlight-border {
-            box-shadow: 0 0 0 4px #aa00ff, 0 0 20px rgba(170, 0, 255, 0.4);
-        }
-
-        .highlight-btnBg {
-            box-shadow: inset 0 0 0 4px #00ff55, 0 0 20px rgba(0, 255, 85, 0.4);
-        }
-
-        .highlight-btnText {
-            text-shadow: 0 0 5px #ff00aa, 0 0 10px #ff00aa;
-            color: #ff00aa !important;
-        }
-
-        .highlight-accent {
-            box-shadow: inset 0 0 0 4px #ffff00, 0 0 20px rgba(255, 255, 0, 0.4);
-        }
-
-        .highlight-grid {
-            box-shadow: inset 0 0 0 4px #00ffff, 0 0 20px rgba(0, 255, 255, 0.4);
-        }
-
-        .wf-panel {
-            background: var(--panel-bg);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--input-border);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .wf-input {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            padding: 8px;
-            border-radius: 4px;
-            color: var(--text-color);
-        }
-
-        .wf-btn {
-            background: var(--btn-bg);
-            color: var(--btn-text);
-            border: 1px solid var(--input-border);
-            padding: 8px;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        .wf-accent {
-            background: var(--accent-color);
+        button.clear-btn {
+            background: #555;
             color: white;
             border: none;
-            padding: 8px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+        button.clear-btn:hover {
+            background: #333;
+        }
+        .footer-note {
+            font-size: 12px;
             text-align: center;
+            margin-top: 15px;
+            color: #777;
         }
-
-        .wf-canvas {
-            background: var(--grid-bg);
-            height: 100px;
-            border-radius: 4px;
-            border: 1px solid var(--input-border);
-        }
-
-        @media (max-width: 850px) {
-            body {
-                padding-top: 80px;
-            }
-
-            .modal-content {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 450px) {
-            .node-item {
-                grid-template-columns: 35px 35px 1fr;
-            }
-
-            .node-item button {
-                grid-column: 1 / -1;
-            }
-
-            .top-bar {
-                flex-direction: column;
-                align-items: flex-end;
-            }
+        .rgb-badge {
+            background: #ddd;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-family: monospace;
         }
     </style>
 </head>
-
 <body>
-    <canvas id="colorWheel" width="500" height="500"></canvas>
-    <script>
-        const canvas = document.getElementById('colorWheel');
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width = 500;
-        const h = canvas.height = 500;
-        const cx = w / 2, cy = h / 2;
-        const radius = w * 0.45;  // margen de 5%
+<div class="container">
+    <div class="canvas-area">
+        <canvas id="colorWheel" width="500" height="500"></canvas>
+        <div class="footer-note">
+            💡 Haz clic dentro del círculo para agregar un nodo<br>
+            📌 Origen (0,0) en esquina inferior izquierda<br>
+            🎨 Saturación: 0% en el centro → 100% en el borde
+        </div>
+    </div>
+    <div class="info-panel">
+        <h3>🎨 Nodos agregados</h3>
+        <div class="cursor-color">
+            🖱️ Color bajo el cursor:<br>
+            <span id="cursorCoords">(---, ---)</span> → 
+            <span id="cursorRgb" class="rgb-badge">RGB(--,--,-)</span>
+            <div id="cursorPreview" style="width:100%; height:20px; border-radius:8px; margin-top:8px; background:#ccc;"></div>
+        </div>
+        <div id="nodesContainer" class="nodes-list">
+            <div style="text-align:center; color:#aaa;">Sin nodos aún</div>
+        </div>
+        <button id="clearNodesBtn" class="clear-btn">🗑️ Limpiar todos los nodos</button>
+    </div>
+</div>
 
-        // --- Función auxiliar: HSL a RGB (hue en grados 0-360) ---
-        // Basada en la fórmula matemática estándar
-        function hslToRgb(h, s, l) {
-            h = (h % 360) / 360; // normalizar a 0..1
-            s = s / 100;
-            l = l / 100;
+<script>
+    // ---------- Configuración del canvas y sistema de coordenadas ----------
+    const canvas = document.getElementById('colorWheel');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = 500;
+    const h = canvas.height = 500;
 
-            let r, g, b;
-            if (s === 0) {
-                r = g = b = l;
-            } else {
-                const hue2rgb = (p, q, t) => {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1 / 6) return p + (q - p) * 6 * t;
-                    if (t < 1 / 2) return q;
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                    return p;
-                };
-                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                const p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
-            }
-            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    // Centro del círculo en coordenadas lógicas (origen abajo-izquierda)
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = w * 0.45;
+
+    // Almacenamiento de nodos en coordenadas lógicas (0,0 abajo izquierda)
+    let nodes = [];
+
+    // ---------- Función HSL a RGB ----------
+    function hslToRgb(h, s, l) {
+        h = (h % 360) / 360;
+        s = s / 100;
+        l = l / 100;
+        let r, g, b;
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
         }
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
 
-        // --- Crear ImageData y recorrer píxeles ---
+    // ---------- Dibujar el círculo cromático con saturación radial ----------
+    function drawColorWheel() {
         const imageData = ctx.getImageData(0, 0, w, h);
-        const data = imageData.data;  // Uint8ClampedArray
+        const data = imageData.data;
 
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                const dx = x - cx;
-                const dy = y - cy;
+        for (let yFis = 0; yFis < h; yFis++) {
+            for (let xFis = 0; xFis < w; xFis++) {
+                // Convertir a coordenadas lógicas (origen abajo izquierda)
+                const xLog = xFis;
+                const yLog = h - 1 - yFis;
+                
+                const dx = xLog - cx;
+                const dy = yLog - cy;
                 const distance = Math.hypot(dx, dy);
-                const idx = (y * w + x) * 4;  // índice en el array
+                const idx = (yFis * w + xFis) * 4;
 
                 if (distance <= radius) {
-                    // Calcular ángulo en radianes: atan2(dy, dx) da -π a π
-                    let angle = Math.atan2(dy, dx);  // -π ... π
-                    // Convertir a grados (0 a 360)
+                    // Ángulo para el matiz (hue)
+                    let angle = Math.atan2(dy, dx);
                     let hue = (angle * 180 / Math.PI + 360) % 360;
-
-                    // Saturación y luminosidad fijas para colores puros
-                    const saturation = 100;
-                    const lightness = 50;
-
+                    
+                    // Saturación: 0 en el centro, 100 en el borde
+                    const t = distance / radius;  // 0 en centro, 1 en borde
+                    const saturation = t * 100;
+                    const lightness = 50;  // luminosidad constante
+                    
                     const [r, g, b] = hslToRgb(hue, saturation, lightness);
-                    data[idx] = r;     // R
-                    data[idx + 1] = g;   // G
-                    data[idx + 2] = b;   // B
-                    data[idx + 3] = 255; // A (opaco)
+                    data[idx] = r;
+                    data[idx+1] = g;
+                    data[idx+2] = b;
+                    data[idx+3] = 255;
                 } else {
-                    // Fuera del círculo: transparente
                     data[idx] = 0;
-                    data[idx + 1] = 0;
-                    data[idx + 2] = 0;
-                    data[idx + 3] = 0;
+                    data[idx+1] = 0;
+                    data[idx+2] = 0;
+                    data[idx+3] = 0;
                 }
             }
         }
-
-        // Volcar los píxeles al canvas
         ctx.putImageData(imageData, 0, 0);
 
-        // Opcional: dibujar un borde circular para definir mejor el límite
+        // Borde del círculo
+        ctx.save();
+        ctx.translate(0, h);
+        ctx.scale(1, -1);
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
         ctx.stroke();
-    </script>
-</body>
+        ctx.restore();
+    }
 
+    // ---------- Dibujar los nodos (en coordenadas lógicas) ----------
+    function drawNodes() {
+        ctx.save();
+        ctx.translate(0, h);
+        ctx.scale(1, -1);
+        for (const node of nodes) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = `rgb(${node.r}, ${node.g}, ${node.b})`;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // ---------- Refrescar todo ----------
+    function refreshCanvas() {
+        drawColorWheel();
+        drawNodes();
+    }
+
+    // ---------- Convertir coordenadas físicas del ratón a coordenadas lógicas (origen abajo izquierda) ----------
+    function mouseToLogical(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        let fisX = (clientX - rect.left) * scaleX;
+        let fisY = (clientY - rect.top) * scaleY;
+        fisX = Math.min(Math.max(0, fisX), w - 1);
+        fisY = Math.min(Math.max(0, fisY), h - 1);
+        const logX = fisX;
+        const logY = h - 1 - fisY;
+        return { x: logX, y: logY };
+    }
+
+    // ---------- Obtener color en coordenadas lógicas ----------
+    function getColorAtLogical(x, y) {
+        const fisX = x;
+        const fisY = h - 1 - y;
+        if (fisX < 0 || fisX >= w || fisY < 0 || fisY >= h) return null;
+        const pixel = ctx.getImageData(fisX, fisY, 1, 1).data;
+        return { r: pixel[0], g: pixel[1], b: pixel[2], a: pixel[3] };
+    }
+
+    // ---------- Verificar si un punto lógico está dentro del círculo ----------
+    function isInsideCircleLogical(x, y) {
+        const dx = x - cx;
+        const dy = y - cy;
+        return Math.hypot(dx, dy) <= radius;
+    }
+
+    // ---------- Actualizar la lista HTML de nodos ----------
+    function updateNodeList() {
+        const container = document.getElementById('nodesContainer');
+        if (nodes.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#aaa;">✨ Haz clic en el círculo para agregar nodos</div>';
+            return;
+        }
+        let html = '';
+        nodes.forEach((node, index) => {
+            html += `
+                <div class="node-item" style="border-left-color: rgb(${node.r},${node.g},${node.b});">
+                    <div class="node-info">
+                        📍 (${node.x}, ${node.y})<br>
+                        🎨 rgb(${node.r}, ${node.g}, ${node.b})
+                    </div>
+                    <button class="delete-btn" data-index="${index}">✖</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = parseInt(btn.getAttribute('data-index'));
+                if (!isNaN(index)) {
+                    nodes.splice(index, 1);
+                    refreshCanvas();
+                    updateNodeList();
+                }
+            });
+        });
+    }
+
+    // ---------- Agregar nodo en coordenadas lógicas ----------
+    function addNodeAtLogical(x, y) {
+        if (!isInsideCircleLogical(x, y)) {
+            console.log("Clic fuera del círculo");
+            return false;
+        }
+        const color = getColorAtLogical(x, y);
+        if (!color || color.a === 0) return false;
+        nodes.push({ x, y, r: color.r, g: color.g, b: color.b });
+        refreshCanvas();
+        updateNodeList();
+        return true;
+    }
+
+    // ---------- Limpiar todos los nodos ----------
+    function clearAllNodes() {
+        nodes = [];
+        refreshCanvas();
+        updateNodeList();
+    }
+
+    // ---------- Seguimiento del cursor (muestra coordenadas lógicas y color) ----------
+    function setupCursorTracker() {
+        const coordsSpan = document.getElementById('cursorCoords');
+        const rgbSpan = document.getElementById('cursorRgb');
+        const previewDiv = document.getElementById('cursorPreview');
+
+        canvas.addEventListener('mousemove', (e) => {
+            const logical = mouseToLogical(e.clientX, e.clientY);
+            coordsSpan.innerText = `(${Math.round(logical.x)}, ${Math.round(logical.y)})`;
+            if (isInsideCircleLogical(logical.x, logical.y)) {
+                const color = getColorAtLogical(logical.x, logical.y);
+                if (color && color.a !== 0) {
+                    rgbSpan.innerText = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                    previewDiv.style.backgroundColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                } else {
+                    rgbSpan.innerText = 'fuera del círculo';
+                    previewDiv.style.backgroundColor = '#ccc';
+                }
+            } else {
+                rgbSpan.innerText = 'fuera del círculo';
+                previewDiv.style.backgroundColor = '#ccc';
+            }
+        });
+    }
+
+    // ---------- Evento de clic para agregar nodos ----------
+    function setupClickToAddNode() {
+        canvas.addEventListener('click', (e) => {
+            const logical = mouseToLogical(e.clientX, e.clientY);
+            addNodeAtLogical(logical.x, logical.y);
+        });
+    }
+
+    // ---------- Inicialización ----------
+    function init() {
+        refreshCanvas();
+        setupCursorTracker();
+        setupClickToAddNode();
+        document.getElementById('clearNodesBtn').addEventListener('click', clearAllNodes);
+        updateNodeList();
+    }
+
+    init();
+</script>
+</body>
 </html>
