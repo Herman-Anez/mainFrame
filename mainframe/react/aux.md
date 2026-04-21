@@ -166,7 +166,7 @@ function Mensaje({ isLoggedIn }) {
 
 // También: {isLoggedIn && <PanelAdmin />}
 
-9. Listas y keys
+1. Listas y keys
 
 Para renderizar arrays de elementos, usa map(). Cada elemento debe tener una key única (estable, predecible, no el índice a menos que la lista sea estática).
 jsx
@@ -224,7 +224,7 @@ function Formulario() {
   return <input ref={inputRef} />;
 }
 
-11. Hooks esenciales (además de useState y useEffect)
+1. Hooks esenciales (además de useState y useEffect)
 
     useContext: consume un Context (ver más abajo) sin anidar componentes.
 
@@ -323,7 +323,7 @@ function App() {
   );
 }
 
-16. Buenas prácticas y patrones comunes
+1. Buenas prácticas y patrones comunes
 
     Componentes pequeños y con una sola responsabilidad.
 
@@ -354,10 +354,10 @@ function useContador(inicial = 0) {
     Next.js (framework fullstack con React): si necesitas SSR, generación estática, rutas basadas en archivos.
 
 18. Ciclo de vida en componentes funcionales (resumen con useEffect)
-Clase	Funcional (useEffect)
-componentDidMount	useEffect(..., [])
-componentDidUpdate	useEffect(..., [deps])
-componentWillUnmount	return () => {...} dentro de useEffect
+Clase Funcional (useEffect)
+componentDidMount useEffect(..., [])
+componentDidUpdate useEffect(..., [deps])
+componentWillUnmount return () => {...} dentro de useEffect
 
 Además, useLayoutEffect es similar pero se ejecuta sincrónicamente después de mutar el DOM (útil para medir elementos).
 19. ¿Qué más necesitas para tener una base completa?

@@ -1,0 +1,1 @@
+pnpm add -D @types/react -- npm i --save-dev @types/react
