@@ -31,4 +31,11 @@ Ctrl + alt + z extencions
   "key": "ctrl+m ctrl+l",
   "command": "markdown.showLockedPreviewToSide"
 }
+
+////editados
+{
+  "key": "ctrl+alt+r",////// "ctrl+k ctrl+o",
+  "command": "workbench.action.files.openFolder",
+  "when": "openFolderWorkspaceSupport && !isSessionsWindow"
+}
 ´´´
