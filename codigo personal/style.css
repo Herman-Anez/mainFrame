@@ -1,0 +1,867 @@
+/* =========================================================================
+   CÍRCULO CROMÁTICO + JUEGO DE LA VIDA — HOJA DE ESTILOS PRINCIPAL
+   
+   SISTEMA DE DISEÑO:
+   Esta hoja utiliza un sistema de "Design Tokens" (variables CSS semánticas)
+   que permiten que la UI entera cambie de apariencia con solo modificar
+   los valores de las variables.
+   
+   ARQUITECTURA DE TEMAS:
+   
+     :root               → Tema CLARO (valores por defecto)
+     body.dark-mode       → Tema OSCURO (sobreescribe las variables)
+     body.style (inline)  → Tema LIBRE  (inyectado por JS, máxima prioridad)
+   
+   La CASCADA CSS determina qué valor gana cuando hay conflicto:
+   
+     Inline styles (body.style)  →  MÁXIMA PRIORIDAD  (Modo Libre)
+     Clase en body (.dark-mode)  →  MEDIA PRIORIDAD   (Modo Oscuro)
+     :root                       →  BAJA PRIORIDAD    (Modo Claro)
+   
+   Cuando el JS limpia los inline styles (body.style.cssText = ''),
+   el navegador vuelve a usar los valores del CSS (dark-mode o :root).
+   
+   TÉCNICA VISUAL: GLASSMORPHISM
+   Los paneles (.glass-panel) usan backdrop-filter: blur() + fondo
+   semi-transparente para crear un efecto de cristal esmerilado.
+   ========================================================================= */
+
+
+/* =========================================
+   1. DESIGN TOKENS — VARIABLES CSS SEMÁNTICAS
+   
+   Estas variables definen la identidad visual completa.
+   En modo "Libre", el script las sobreescribe dinámicamente
+   en body.style para que los nodos del círculo cromático
+   controlen la UI en tiempo real.
+   
+   CONVENCIÓN DE NOMBRES:
+     --background:       Fondo de la página
+     --surface:          Fondo de tarjetas/paneles  
+     --surface-sunken:   Fondo hundido (canvas, inputs)
+     --foreground:       Color de texto principal
+     --muted:            Fondos secundarios sutiles
+     --border:           Bordes de elementos
+     --primary:          Color de marca / acción principal
+     --secondary:        Color de elementos secundarios
+     --*-foreground:     Texto sobre la superficie del mismo nombre
+   ========================================= */
+
+/* Tema Claro — Valores por defecto en :root */
+:root {
+    --background: #e0e5ec;                         /* Gris cálido */
+    --surface: rgba(255, 255, 255, 0.7);           /* Blanco semi-transparente (glassmorphism) */
+    --panel-border: rgba(255, 255, 255, 0.5);      /* Borde sutil de paneles */
+    --foreground: #2d3748;                         /* Texto oscuro */
+    --muted: rgba(255, 255, 255, 0.9);             /* Fondos secundarios claros */
+    --border: rgba(203, 213, 225, 0.8);            /* Bordes suaves */
+    --secondary: rgba(241, 245, 249, 0.8);         /* Botones estándar */
+    --secondary-foreground: #334155;               /* Texto en botones */
+    --secondary-hover: rgba(203, 213, 225, 1);     /* Hover de botones */
+    --primary: #3b82f6;                            /* Azul principal */
+    --primary-foreground: #ffffff;                  /* Texto sobre primary */
+    --surface-sunken: #f8fafc;                     /* Canvas/inputs hundidos */
+
+    --shadow-color: rgba(148, 163, 184, 0.25);     /* Sombras generales */
+    --canvas-shadow: rgba(148, 163, 184, 0.4);     /* Sombra del canvas */
+    --glass-blur: blur(12px);                       /* Intensidad del blur */
+}
+
+/* Tema Oscuro — Se activa al añadir clase "dark-mode" al body.
+   Sobreescribe TODAS las variables del tema claro. */
+body.dark-mode {
+    --background: #0f172a;                         /* Azul muy oscuro (Slate-900) */
+    --surface: rgba(30, 41, 59, 0.6);              /* Slate semi-transparente */
+    --panel-border: rgba(255, 255, 255, 0.05);     /* Borde casi invisible */
+    --foreground: #f8fafc;                         /* Texto claro */
+    --muted: rgba(15, 23, 42, 0.8);                /* Fondos profundos */
+    --border: rgba(51, 65, 85, 0.8);               /* Bordes tenues */
+    --secondary: rgba(51, 65, 85, 0.6);            /* Botones oscuros */
+    --secondary-foreground: #f1f5f9;               /* Texto claro en botones */
+    --secondary-hover: rgba(71, 85, 105, 1);       /* Hover más luminoso */
+    --primary: #6366f1;                            /* Índigo vibrante */
+    --primary-foreground: #ffffff;                  /* Texto sobre primary */
+    --surface-sunken: #0b1120;                     /* Canvas negro profundo */
+
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --canvas-shadow: rgba(0, 0, 0, 0.7);
+    --glass-blur: blur(16px);                       /* Blur más intenso en oscuro */
+}
+
+
+/* =========================================
+   2. ESTRUCTURA GLOBAL DEL BODY
+   
+   El body usa:
+   - background-color (NO el shorthand "background") para evitar
+     conflictos con background-image. Esta decisión fue deliberada.
+   - Flexbox centered para posicionar el app-container.
+   - Transición suave al cambiar de tema.
+   ========================================= */
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--background);           /* SOLO background-color, no shorthand */
+    color: var(--foreground);
+    transition: background-color 0.5s ease, color 0.5s ease;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Contenedor principal — Layout de 2 columnas con flex-wrap */
+.app-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 60px;                              /* Espacio para la barra fija superior */
+    z-index: 10;
+}
+
+
+/* =========================================
+   3. EFECTO GLASSMORPHISM — PANELES DE CRISTAL
+   
+   Técnica CSS moderna que combina:
+   - Fondo semi-transparente (rgba)
+   - backdrop-filter: blur() para difuminar lo que hay detrás
+   - Borde sutil + sombra interior para dar profundidad
+   ========================================= */
+.glass-panel {
+    background: var(--surface);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);     /* Safari */
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 30px -10px var(--shadow-color), 
+                inset 0 1px 0 rgba(255,255,255,0.1); /* Brillo superior sutil */
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+/* =========================================
+   4. BARRA SUPERIOR FIJA (top-bar)
+   
+   Contiene el botón de "Mapa CSS" y el selector de 3 modos.
+   Usa position: fixed para mantenerse visible al hacer scroll.
+   ========================================= */
+.top-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+    align-items: center;
+}
+
+/* Contenedor del selector de tema (☀️🌙🎨)
+   con glassmorphism propio para flotar visualmente */
+.top-bar .theme-selector {
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 4px 15px -5px var(--shadow-color);
+    border-radius: 30px;
+    padding: 3px;
+}
+
+.top-bar .theme-selector .mode-btn {
+    border-radius: 30px;
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+/* Botón genérico de la barra superior */
+.top-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--foreground);
+    backdrop-filter: var(--glass-blur);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px -5px var(--shadow-color);
+}
+
+.top-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -5px var(--shadow-color);
+    background: var(--secondary-hover);
+}
+
+/* Estilo del botón de acción principal (fondo = primary color) */
+.btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.btn-primary:hover {
+    background: var(--primary);
+    filter: brightness(1.15);                       /* Brillo en hover sin cambiar el color */
+}
+
+
+/* =========================================
+   5. LIENZOS (CANVAS) Y JUEGO DE LA VIDA
+   
+   Sección izquierda del layout con:
+   - El Círculo Cromático (#wheel) - 350x350
+   - El Autómata Celular (#gameCanvas) - 350x350
+   ========================================= */
+.canvas-section {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.canvas-container, .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Wrapper con aspect-ratio cuadrado usando el truco de padding-bottom */
+.canvas-wrapper {
+    position: relative;
+    border-radius: 50%;
+    width: 100%;
+    padding-bottom: 100%;                          /* Fuerza ratio 1:1 */
+    height: 0;
+}
+
+.game-container .canvas-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px var(--panel-border);
+}
+
+.canvas-wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background: var(--surface-sunken);
+    box-shadow: 0 10px 25px -5px var(--canvas-shadow);
+    transition: background 0.5s ease;
+}
+
+/* Canvas del Círculo Cromático */
+#wheel {
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    display: block;
+    border-radius: 50%;                            /* Circular */
+    background: var(--surface-sunken);
+    box-shadow: 0 15px 35px -10px var(--canvas-shadow);
+    cursor: grab;
+    transition: background 0.5s ease;
+}
+
+#wheel:active {
+    cursor: grabbing;                              /* Cambia cursor al arrastrar */
+}
+
+/* Canvas del Juego de la Vida */
+#gameCanvas {
+    cursor: crosshair;                             /* Indica que se puede pintar */
+    background-color: var(--surface-sunken);
+}
+
+/* Encabezado del panel del autómata */
+.game-header {
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.game-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin: 0;
+}
+
+/* Botones de control del autómata: Iniciar | Azar | Limpiar */
+.game-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+
+/* =========================================
+   6. PANEL DE CONTROLES (aside derecho)
+   
+   Contiene:
+   - Selector de modo de armonía cromática
+   - Slider de rotación global
+   - Lista de nodos (N1, N2, N3...)
+   - Paleta generada (variaciones 100-900)
+   - Botón de exportar CSS
+   ========================================= */
+.controls {
+    width: 420px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.control-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: var(--secondary);
+    padding: 2px 8px;
+    border-radius: 10px;
+    opacity: 0.8;
+}
+
+
+/* ----- Selector de Modos (Armonía y Tema) -----
+   Grupo de botones tipo "segmented control".
+   El botón .active invierte los colores foreground/background
+   para indicar visualmente la selección actual. */
+.select-group {
+    display: flex;
+    background: var(--muted);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid var(--border);
+}
+
+.mode-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px 4px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+/* Botón activo — Inversión de colores (foreground ↔ background) */
+.mode-btn.active {
+    background: var(--foreground);
+    color: var(--background);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+
+/* ----- Botones Generales ----- */
+.btn {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    font-weight: 500;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    background: var(--secondary-hover);
+    transform: translateY(-1px);
+}
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-large {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Botón con borde punteado (estilo "añadir") */
+.btn-dashed {
+    border: 1px dashed var(--border);
+    background: transparent;
+    color: var(--foreground);
+    opacity: 0.8;
+}
+.btn-dashed:hover {
+    opacity: 1;
+    border-color: var(--foreground);
+}
+
+
+/* ----- Slider de Rotación Global -----
+   Estilización personalizada del input[type="range"].
+   Se necesitan pseudo-elementos vendor-specific:
+   - ::-webkit-slider-thumb (Chrome, Edge, Safari)
+   - ::-webkit-slider-runnable-track (pista en webkit) */
+.custom-range {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--muted);
+    outline: none;
+}
+
+.custom-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);                     /* Thumb usa el color primario */
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+}
+
+.custom-range::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+
+/* =========================================
+   7. NODOS DE COLOR (node-item)
+   
+   Cada nodo se muestra como una fila en un grid:
+   [Etiqueta] [ColorPicker] [InputHex] [BotónEliminar]
+   [          Slider de Claridad (ocupa toda la fila)          ]
+   
+   El grid usa 2 filas:
+   - Fila 1: 4 columnas (label, picker, hex, acciones)
+   - Fila 2: Slider de claridad (grid-column: 1 / -1, span all)
+   
+   Los roles de cada nodo:
+     N1 → Identidad Primaria: Color de marca, botones de acción
+     N2 → Fondo / Superficie: Controla background, surface, foreground
+     N3 → Secundario / Borde:  Controla muted, secondary, border
+   ========================================= */
+.node-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.node-item {
+    display: grid;
+    grid-template-columns: 85px 45px 1fr auto;     /* label | picker | hex | btn */
+    grid-template-rows: auto auto;                  /* fila datos + fila slider */
+    align-items: center;
+    gap: 8px 12px;
+    background: var(--muted);
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.node-item:hover {
+    border-color: rgba(255,255,255,0.2);
+    transform: translateX(4px);                     /* Micro-animación de hover */
+}
+
+
+/* ----- Slider de Claridad (Lightness) -----
+   Controla el componente L de HSL para cada nodo.
+   Se extiende por toda la fila inferior del grid.
+   
+   NOTA TÉCNICA IMPORTANTE:
+   En Webkit (Chrome/Edge/Safari), los estilos de la pista DEBEN
+   aplicarse a ::-webkit-slider-runnable-track, NO al input directamente.
+   Si pones el background en el input, la pista se ve como un rectángulo gris.
+   
+   El degradado negro→gris→blanco es visual; el valor real va de 0 a 100%. */
+.lightness-control {
+    grid-column: 1 / -1;                           /* Ocupa todas las columnas */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Reset del aspecto nativo del slider */
+.lightness-control .lightness-range {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    background: transparent;                        /* El background va en el TRACK, no aquí */
+    cursor: pointer;
+}
+
+/* Pista del slider (Chrome/Edge/Safari) */
+.lightness-control .lightness-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #000, #888, #fff);
+    border: 1px solid var(--border);
+}
+
+/* Pista del slider (Firefox) */
+.lightness-control .lightness-range::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #000, #888, #fff);
+    border: 1px solid var(--border);
+}
+
+/* Thumb del slider (Chrome/Edge/Safari) */
+.lightness-control .lightness-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--foreground);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+    margin-top: -6px;                              /* Centra el thumb sobre la pista de 6px */
+}
+
+/* Thumb del slider (Firefox) */
+.lightness-control .lightness-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--foreground);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+
+/* Etiqueta de porcentaje (ej: "50%") */
+.lightness-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    opacity: 0.7;
+    min-width: 35px;
+    text-align: right;
+}
+
+
+/* ----- Inputs de Color ----- */
+input[type="color"] {
+    width: 100%;
+    height: 35px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    -webkit-appearance: none;
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(0,0,0,0.2); border-radius: 6px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3);}
+
+/* ----- Input de Texto Hexadecimal ----- */
+input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'Courier New', Courier, monospace; /* Monospace para códigos hex */
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--foreground);
+    outline: none;
+    transition: all 0.3s ease;
+}
+input[type="text"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary), 0.2); /* Anillo de foco */
+}
+
+/* Línea divisora con degradado */
+.divider {
+    width: 100%;
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 8px 0;
+}
+
+
+/* =========================================
+   8. PALETA GENERADA (variaciones de color)
+   
+   Muestra las variaciones de cada nodo en
+   5 niveles de luminosidad (100, 300, 500, 700, 900).
+   Cada "swatch" es clickeable para copiar su hex.
+   ========================================= */
+.palette-preview {
+    display: flex;
+    gap: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-wrap: wrap;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+    background: var(--muted);
+    padding: 6px;
+}
+
+/* Columna vertical: una por cada nodo de color */
+.color-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 60px;
+    gap: 4px;
+}
+
+/* Muestra individual de color */
+.color-swatch {
+    height: 35px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bounce effect */
+}
+
+.color-swatch:hover {
+    transform: scale(1.05);
+    z-index: 10;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+
+/* =========================================
+   9. MODAL — MAPA DE VARIABLES CSS
+   
+   Se activa al añadir la clase .visible al overlay.
+   Usa opacity + pointer-events para la transición.
+   El contenido hace scale(0.95 → 1) para efecto de "zoom in".
+   ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;                          /* Invisible = no intercepta clicks */
+    transition: opacity 0.4s ease;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;                          /* Visible = intercepta clicks */
+}
+
+/* Grid de 2 columnas: controles | wireframe */
+.modal-content {
+    width: 900px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 30px;
+    transform: scale(0.95);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+
+/* Botón de cerrar el modal (×) */
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 10;
+}
+.close-modal:hover {
+    background: var(--foreground);
+    color: var(--background);
+    transform: rotate(90deg);                      /* Gira 90° en hover */
+}
+
+/* Panel izquierdo del modal: botones de variables */
+.map-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.map-controls h3 { margin-top: 0; margin-bottom: 4px; }
+
+/* Botón individual de variable CSS */
+.map-var-btn {
+    background: var(--muted);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    text-align: left;
+    border-radius: 8px;
+    cursor: crosshair;
+    font-family: 'Courier New', Courier, monospace; /* Monospace para nombres de variables */
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--foreground);
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.map-var-btn span {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.map-var-btn:hover {
+    border-color: var(--primary);
+    background: rgba(var(--primary), 0.1);
+    transform: translateX(8px);                    /* Desplaza a la derecha */
+}
+
+
+/* ----- Wireframe Interactivo -----
+   Simula una UI genérica para mostrar dónde aplica cada token.
+   Las clases .highlight-* se añaden/quitan con JS al hover
+   para resaltar visualmente la variable correspondiente. */
+.map-wireframe {
+    background: var(--background);
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    transition: background 0.5s ease;
+}
+
+/* Todos los elementos del wireframe tienen transición por defecto */
+.wf-element { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+
+/* ----- Clases de Resaltado (Highlight) -----
+   Cada clase agrega un borde interior luminoso y glow exterior
+   en un color diferente para identificar la variable visualmente.
+   Son añadidas dinámicamente por highlight() en script.js. */
+.highlight-background { box-shadow: inset 0 0 0 4px #ff2a6d, 0 0 40px rgba(255,42,109,0.3); }
+.highlight-surface { box-shadow: inset 0 0 0 4px #01a2ff, 0 0 40px rgba(1,162,255,0.3); }
+.highlight-foreground { text-shadow: 0 0 8px #05d5ff, 0 0 20px #05d5ff; color: #05d5ff !important; transform: scale(1.05); }
+.highlight-muted { box-shadow: inset 0 0 0 4px #ffaa00, 0 0 30px rgba(255,170,0,0.3); transform: scale(1.02); }
+.highlight-border { box-shadow: 0 0 0 4px #b92b27, 0 0 30px rgba(185,43,39,0.3); }
+.highlight-secondary { box-shadow: inset 0 0 0 4px #00ff55, 0 0 30px rgba(0,255,85,0.3); transform: scale(1.05); }
+.highlight-secondary-foreground { text-shadow: 0 0 8px #ff00aa, 0 0 20px #ff00aa; color: #ff00aa !important; }
+.highlight-primary { box-shadow: inset 0 0 0 4px #f6d365, 0 0 40px rgba(246,211,101,0.5); transform: scale(1.1); }
+.highlight-surface-sunken { box-shadow: inset 0 0 0 4px #00ffcc, 0 0 40px rgba(0,255,204,0.3); }
+
+/* Componentes del wireframe — estilizados con Design Tokens */
+.wf-panel { background: var(--surface); padding: 24px; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+.wf-input { background: var(--muted); border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: var(--foreground); font-size: 0.9rem;}
+.wf-btn-row { display: flex; gap: 12px; }
+.wf-btn { flex: 1; background: var(--secondary); color: var(--secondary-foreground); border: 1px solid var(--border); padding: 12px; border-radius: 8px; text-align: center; }
+.wf-btn:hover { background: var(--secondary-hover); }
+.wf-accent { background: var(--primary); color: var(--primary-foreground); border: none; padding: 14px; border-radius: 8px; text-align: center; font-weight: 600;}
+.wf-canvas { background: var(--surface-sunken); height: 120px; border-radius: 8px; border: 1px solid var(--border); }
+
+
+/* =========================================
+   10. RESPONSIVE — MEDIA QUERIES
+   
+   Breakpoints:
+   - ≤900px: Layout en una sola columna
+   - ≤500px: Ajustes móvil (nodos compactos, botones apilados)
+   ========================================= */
+@media (max-width: 900px) { 
+    body { padding-top: 80px; align-items: flex-start; } 
+    .app-container { gap: 24px; }
+    .modal-content { grid-template-columns: 1fr; } 
+    .controls { width: 100%; }
+}
+@media (max-width: 500px) {
+    .node-item { grid-template-columns: 85px 35px 1fr; gap: 8px; padding: 8px;}
+    .node-item button { grid-column: 1 / -1; width: 100%; margin-top: 4px;}
+    .top-bar { flex-direction: column; align-items: flex-end; right: 10px; gap: 8px;}
+    .select-group { flex-wrap: wrap; }
+    .mode-btn { min-width: 45%; }
+    .game-btn-group { grid-template-columns: 1fr; }
+}

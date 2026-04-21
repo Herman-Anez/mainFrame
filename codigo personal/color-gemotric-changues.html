@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Círculo Cromático Interactivo Pro</title>
+    <style>
+        /* ==========================================================================
+           1. VARIABLES CSS (SISTEMA DE TEMAS)
+           Usamos variables nativas de CSS para definir toda la paleta de colores de 
+           la interfaz. Así, al cambiar al modo oscuro, solo cambiamos estas variables
+           y el navegador repinta todo automáticamente sin tocar el resto del CSS.
+           ========================================================================== */
+        :root {
+            --bg-color: #f0f2f5;           /* Fondo gris clarito de la web *
+            --panel-bg: white;             /* Fondo blanco del panel de controles */
+            --text-color: #333333;         /* Texto gris oscuro casi negro */
+            --input-bg: white;             /* Fondo de los campos de texto */
+            --input-border: #cccccc;       /* Borde gris claro para botones e inputs */
+            --btn-bg: #e0e0e0;             /* Gris suave para botones inactivos */
+            --btn-text: #333333;           /* Texto de los botones */
+            --btn-hover: #d0d0d0;          /* Color al pasar el ratón por encima */
+            --shadow-color: rgba(0, 0, 0, 0.1); /* Sombras muy sutiles para los paneles */
+            --canvas-shadow: rgba(0, 0, 0, 0.2);/* Sombras un poco más fuertes para el círculo */
+            --accent-color: #4CAF50;       /* Verde para llamar la atención (botón exportar) */
+        }
+
+        /* Cuando Javascript le pone la clase "dark-mode" a la etiqueta <body>,
+           estas variables sobrescriben a las anteriores */
+        body.dark-mode {
+            --bg-color: #121212;           /* Fondo casi negro */
+            --panel-bg: #1e1e1e;           /* Panel gris muy oscuro */
+            --text-color: #e0e0e0;         /* Texto blanco roto */
+            --input-bg: #2d2d2d;           /* Inputs un poco más claros que el fondo */
+            --input-border: #444444;       /* Bordes sutiles para contrastar */
+            --btn-bg: #333333;             /* Botones grises oscuros */
+            --btn-text: #e0e0e0;           /* Texto claro para los botones */
+            --btn-hover: #444444;          /* Efecto hover más claro */
+            --shadow-color: rgba(0, 0, 0, 0.5); /* Sombras mucho más intensas para que se noten sobre oscuro */
+            --canvas-shadow: rgba(0, 0, 0, 0.6);
+            --accent-color: #45a049;       /* Un verde un poco más apagado para no deslumbrar */
+        }
+
+        /* ==========================================================================
+           2. ESTILOS GENERALES Y ESTRUCTURA (Layout)
+           ========================================================================== */
+        body {
+            /* Usamos la fuente nativa del sistema operativo del usuario para que cargue rápido y se vea familiar */
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: row; /* Coloca el canvas y el panel uno al lado del otro */
+            justify-content: center; /* Centra todo horizontalmente */
+            align-items: flex-start; /* Alinea todo arriba */
+            background: var(--bg-color); /* Aquí aplicamos la variable del fondo */
+            color: var(--text-color);
+            transition: background 0.3s ease, color 0.3s ease; /* Transición suave al cambiar de tema */
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh; /* Obliga al body a ocupar toda la altura de la pantalla como mínimo */
+            box-sizing: border-box;
+            gap: 40px; /* Separación de 40px entre el círculo y el panel */
+            flex-wrap: wrap; /* Si la pantalla es pequeña, manda el panel debajo del círculo automáticamente */
+        }
+
+        /* Botón de la esquina superior derecha para cambiar de tema */
+        #themeToggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 20px; /* Bordes muy redondeados (píldora) */
+            border: 1px solid var(--input-border);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            z-index: 10; /* Asegura que siempre esté por encima de todo */
+        }
+
+        #themeToggle:hover {
+            background: var(--btn-hover);
+        }
+
+        /* Contenedor que abraza al <canvas> para poder posicionarlo mejor */
+        #canvas-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            max-width: 100%;
+        }
+
+        /* El lienzo donde dibujamos */
+        canvas {
+            border-radius: 50%; /* Lo corta en forma de círculo (aunque por dentro pintemos un cuadrado, por fuera se ve redondo) */
+            box-shadow: 0 4px 15px var(--canvas-shadow);
+            touch-action: none; /* CRÍTICO PARA MÓVILES: Evita que al arrastrar el dedo sobre el círculo, el navegador intente hacer scroll hacia abajo */
+            transition: box-shadow 0.3s ease;
+            max-width: 100%; /* Si la pantalla es menor a 400px, el canvas se encogerá para caber */
+            height: auto; /* Mantiene la proporción si el canvas se encoge */
+        }
+
+        /* El panel lateral derecho que contiene todos los botones y textos */
+        .controls {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Separación vertical consistente entre todos los elementos hijos */
+        }
+
+        /* ==========================================================================
+           3. ESTILOS DE LOS COMPONENTES INTERNOS (Botones, Inputs, Rejillas)
+           ========================================================================== */
+        
+        /* 🚨 SOLUCIÓN AL BOTÓN COMPLEMENTARIO: 
+           El contenedor de los botones superiores ahora es una rejilla (grid) de 2 columnas exactas. */
+        .modes-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 1fr = 1 fracción. Crea dos columnas del mismo ancho */
+            gap: 8px;
+        }
+
+        .modes-selector button {
+            width: 100%;
+            padding: 8px 4px;
+            font-size: 13px; /* Letra un pelín más pequeña para que quepa "Complementario" */
+            white-space: nowrap; /* Prohíbe que el texto salte de línea */
+            overflow: hidden; /* Corta el texto si se sale del botón */
+            text-overflow: ellipsis; /* Añade "..." al final si el texto tuvo que ser cortado */
+        }
+
+        /* Estilo para marcar qué botón de modo está activo actualmente */
+        .modes-selector button.active {
+            background: var(--text-color);
+            color: var(--panel-bg);
+        }
+
+        /* Cada fila de nodo (donde está el texto, el color y el botón de borrar) 
+           Usa CSS Grid para asegurar que cada cosa tenga su espacio reservado y no se pisen */
+        .node-item {
+            display: grid;
+            /* 4 columnas: 40px para "N1:", 40px para el cuadradito de color, 1fr (todo el espacio sobrante) para el input texto, y 'auto' para que el botón de borrar ocupe lo que mida su texto */
+            grid-template-columns: 40px 40px 1fr auto; 
+            align-items: center; /* Centra todo verticalmente en la fila */
+            gap: 8px;
+            width: 100%;
+        }
+
+        .node-label {
+            font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap; 
+        }
+
+        /* Corrección de estilos para el selector de color nativo del navegador (<input type="color">)
+           Por defecto, los navegadores le ponen bordes feos y rellenos extraños. Esto lo limpia. */
+        input[type="color"] {
+            border: 1px solid var(--input-border);
+            width: 100%; 
+            height: 35px;
+            cursor: pointer;
+            border-radius: 4px;
+            background: none;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            -webkit-appearance: none; /* Arreglo esencial para navegadores de Apple (iOS/Mac) */
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+        input[type="text"] {
+            width: 100%; 
+            padding: 8px;
+            font-family: monospace; /* Fuente de ancho fijo (tipo máquina de escribir) para códigos Hexadecimales */
+            font-size: 14px;
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            box-sizing: border-box; 
+        }
+
+        .rotation-control {
+            width: 100%;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-family: inherit; /* Hereda la tipografía de la página */
+            white-space: nowrap; 
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+        }
+
+        /* Botón final llamativo */
+        #exportBtn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            padding: 12px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #exportBtn:hover { filter: brightness(1.1); }
+
+        /* ==========================================================================
+           4. ESTILOS DEL PANEL DE VARIACIONES (Generador de paleta)
+           ========================================================================== */
+        #palettePreview {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-wrap: wrap; /* Permite que las columnas de color bajen de fila si hay muchos nodos y no caben */
+        }
+
+        /* Cada columna representa a un nodo, y dentro tendrá los rectangulitos de luz/sombra */
+        .color-column {
+            flex: 1; /* Todas las columnas intentan medir lo mismo */
+            display: flex;
+            flex-direction: column;
+            min-width: 60px; /* Garantiza un ancho mínimo para que el texto de dentro se pueda leer un poco */
+        }
+
+        /* Cada rectangulito individual con un color generado */
+        .color-swatch {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8); /* Importantísimo: como no sabemos si el fondo que nos toca es casi blanco o casi negro, le ponemos una sombra al texto blanco para asegurar que siempre se lea */
+            font-family: monospace;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            user-select: none; /* Evita que el usuario seleccione el texto al hacer doble clic */
+            overflow: hidden; 
+        }
+
+        .color-swatch:hover {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        /* ==========================================================================
+           5. MEDIA QUERIES (Ajustes para teléfonos móviles muy estrechos)
+           Si la pantalla mide 450px de ancho o menos, aplicamos estas reglas extra.
+           ========================================================================== */
+        @media (max-width: 450px) {
+            body {
+                padding: 60px 10px 20px 10px; /* Damos más espacio arriba para que el botón de tema no se monte sobre el canvas */
+            }
+
+            #themeToggle {
+                top: 10px;
+                right: 10px;
+            }
+
+            .node-item {
+                /* En pantallas muy pequeñas, "rompemos" la fila del nodo.
+                   Ponemos el texto, el color y el input arriba, y el botón de "Borrar" 
+                   lo mandamos a la fila de abajo. */
+                grid-template-columns: 35px 35px 1fr;
+            }
+
+            .node-item button {
+                grid-column: 1 / -1; /* Le decimos al botón que ocupe desde la columna 1 hasta el final */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button id="themeToggle">🌙 Modo Oscuro</button>
+
+    <div id="canvas-container">
+        <canvas id="wheel" width="400" height="400"></canvas>
+    </div>
+
+    <div class="controls">
+        
+        <div class="modes-selector">
+            <button onclick="setMode('manual')" id="btn-manual" class="active">Libre</button>
+            <button onclick="setMode('complementary')" id="btn-complementary">Complementario</button>
+            <button onclick="setMode('triad')" id="btn-triad">Tríada</button>
+            <button onclick="setMode('tetrad')" id="btn-tetrad">Tetráda</button>
+        </div>
+
+        <div>
+            <label style="font-weight: bold; font-size: 14px; margin-bottom: 5px; display: block;">Rotación Global:</label>
+            <input type="range" id="globalRotation" class="rotation-control" min="0" max="360" value="0">
+        </div>
+
+        <button id="addNode" style="display: block; width: 100%;">+ Añadir Nodo Libre</button>
+
+        <div id="nodeList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+
+        <hr style="width: 100%; border: 0; border-top: 1px solid var(--input-border); margin: 10px 0;">
+
+        <strong style="font-size: 14px;">Variaciones de Brillo (Haz clic para copiar)</strong>
+        <div id="palettePreview"></div>
+
+        <button id="exportBtn" onclick="exportCSS()">📋 Copiar código CSS</button>
+    </div>
+
+    <script>
+        // --- 0. LÓGICA DEL MODO OSCURO ---
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            // Alterna la presencia de la clase 'dark-mode' en la etiqueta <body>
+            document.body.classList.toggle('dark-mode');
+            // Cambia el texto del botón basándose en si la clase existe o no
+            themeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+        });
+
+        // --- 1. VARIABLES GLOBALES Y CACHÉ DEL DOM ---
+        // Guardamos las referencias a los elementos HTML más usados para no tener que buscarlos continuamente
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d'); // El 'contexto' es el objeto que nos da los métodos para dibujar (líneas, círculos, etc.)
+        const nodeListDiv = document.getElementById('nodeList');
+        const globalRotInput = document.getElementById('globalRotation');
+        const previewDiv = document.getElementById('palettePreview');
+
+        /* OPTIMIZACIÓN DE RENDIMIENTO: EL CANVAS FANTASMA
+           Calcular un degradado radial arcoíris es un proceso matemático pesado. 
+           Si lo hiciéramos cada vez que el usuario mueve el ratón un pixel, la web iría lenta.
+           Solución: Creamos un <canvas> mediante código que NUNCA añadimos al HTML (es invisible).
+           Dibujamos el fondo complejo ahí una sola vez, y luego usamos ese canvas fantasma como si fuera una foto pre-renderizada para pegarla en el canvas real. */
+        const bgCanvas = document.createElement('canvas');
+        bgCanvas.width = 400;
+        bgCanvas.height = 400;
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgDrawn = false; // Bandera para saber si ya hemos hecho el dibujo pesado o no
+
+        // MEMORIA PRINCIPAL DE LA APP
+        // Array de objetos. Cada objeto es un "Nodo" (un circulito).
+        // - id: Un identificador único para saber a quién borrar si pulsamos la [X].
+        // - baseAngle: Su posición en grados (0 a 360). Determina su Matiz (Color puro).
+        // - s: Saturación (0.0 al centro, 1.0 al borde).
+        // - l: Luminosidad. Fijo a 0.5 (ni muy claro ni muy oscuro) en el círculo selector.
+        let nodes = [{ id: Date.now(), baseAngle: 0, s: 1, l: 0.5 }];
+        
+        let draggingNode = null; // Apuntador al nodo que el usuario tiene agarrado con el ratón/dedo
+        let currentMode = 'manual'; // Define el comportamiento geométrico
+        let generatedCSS = ''; // Acumulador donde iremos escribiendo el código CSS final
+
+        // --- 2. FUNCIONES MATEMÁTICAS (Teoría del Color) ---
+        // Estas funciones convierten entre el formato Hexadecimal que entienden las webs (#FF0000) 
+        // y el formato HSL que entiende la geometría del círculo (Ángulo 0°, Saturación 100%, Luminosidad 50%).
+
+        // De HEX a HSL (Para cuando el usuario escribe a mano en la cajita)
+        function hexToHSL(hex) {
+            // Se extraen los pares de letras y se pasan a base 10 (ej: FF -> 255), luego se dividen para tener un porcentaje de 0 a 1.
+            let r = parseInt(hex.slice(1, 3), 16) / 255;
+            let g = parseInt(hex.slice(3, 5), 16) / 255;
+            let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+            // Busca el canal de color más dominante y el menos dominante
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2; // La luminosidad es la media
+
+            if (max === min) {
+                h = s = 0; // Si todos los canales son iguales, es un tono de gris
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min); // Fórmula estándar de saturación HSL
+                // Calcula el ángulo dependiendo de qué color mandaba
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return { h: h * 360, s: s, l: l }; // Devuelve Grados (0-360)
+        }
+
+        // De HSL a HEX (Para pintar el canvas o actualizar los inputs a partir del movimiento)
+        function hslToHex(h, s, l) {
+            h = (h % 360 + 360) % 360; // Normaliza el ángulo (ej: si es -10, lo convierte a 350)
+            let r, g, b;
+            h /= 360; // Pasa el ángulo de grados a porcentaje (0-1)
+
+            if (s === 0) {
+                r = g = b = l; // Si no hay saturación, todos los canales RGB son iguales a la luminosidad (gris)
+            } else {
+                // Función matemática auxiliar para la conversión
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1; if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+                let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                let p = 2 * l - q;
+                // Calculamos canal por canal desfasando el ángulo un tercio de vuelta (120°)
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            // Multiplicamos por 255 y convertimos a Hex (ToString(16)). PadStart asegura que "5" se convierta en "05".
+            const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+        }
+
+        // --- 3. LÓGICA DE MODOS GEOMÉTRICOS ---
+        // Se ejecuta al hacer clic en los botones superiores
+        window.setMode = (mode) => {
+            currentMode = mode;
+
+            // Actualizar interfaz: quitar la clase 'active' de todos los botones y ponérsela al clickado
+            document.querySelectorAll('.modes-selector button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + mode).classList.add('active');
+
+            const addBtn = document.getElementById('addNode');
+            // Tomamos el primer nodo como el "Maestro". Si no existe ninguno, creamos uno virtual en 0° (Rojo)
+            const base = nodes[0] || { id: Date.now(), baseAngle: 0, s: 1, l: 0.5 };
+
+            if (mode === 'manual') {
+                // En modo libre, mostramos el botón de añadir puntos extra
+                addBtn.style.display = 'block';
+            } else {
+                // En modos automáticos, ocultamos el botón
+                addBtn.style.display = 'none';
+
+                // REESCRITURA DE LA MEMORIA: 
+                // Sobrescribimos el array 'nodes' con los puntos matemáticamente correctos según la geometría elegida.
+                if (mode === 'complementary') {
+                    // Complementario: 2 nodos opuestos (180° de diferencia)
+                    nodes = [base, { id: Date.now() + 1, baseAngle: base.baseAngle + 180, s: base.s, l: base.l }];
+                } else if (mode === 'triad') {
+                    // Tríada: 3 nodos formando un triángulo equilátero (120° de diferencia)
+                    nodes = [base,
+                        { id: Date.now() + 1, baseAngle: base.baseAngle + 120, s: base.s, l: base.l },
+                        { id: Date.now() + 2, baseAngle: base.baseAngle + 240, s: base.s, l: base.l }];
+                } else if (mode === 'tetrad') {
+                    // Tetráda: 4 nodos formando un cuadrado (90° de diferencia)
+                    nodes = [base,
+                        { id: Date.now() + 1, baseAngle: base.baseAngle + 90, s: base.s, l: base.l },
+                        { id: Date.now() + 2, baseAngle: base.baseAngle + 180, s: base.s, l: base.l },
+                        { id: Date.now() + 3, baseAngle: base.baseAngle + 270, s: base.s, l: base.l }];
+                }
+            }
+            // Después de cambiar la memoria interna, ordenamos que se reconstruya la interfaz visual (los inputs y listas)
+            buildDOM();
+        };
+
+        // --- 4. MOTOR DE RENDERIZADO VISUAL ---
+        function draw() {
+            const centerX = canvas.width / 2; // 200px
+            const centerY = canvas.height / 2; // 200px
+            const radius = 180; // Dejamos un margen de 20px hasta el borde del canvas
+            const offset = parseInt(globalRotInput.value); // Leemos si el usuario ha tocado el slider maestro
+
+            // PASO 1: Generar el fondo complejo SÓLO la primera vez en la caché (bgCanvas)
+            if (!bgDrawn) {
+                // Dibujamos el círculo grado por grado (360 veces)
+                for (let i = 0; i < 360; i++) {
+                    bgCtx.beginPath();
+                    bgCtx.moveTo(centerX, centerY); // Ponemos el pincel en el centro
+                    // Dibujamos un arco. Math.PI/180 convierte grados a radianes.
+                    // Dibujamos 1.5 grados de ancho para que haya un ligero solapamiento y no queden rayas blancas entre grado y grado.
+                    bgCtx.arc(centerX, centerY, radius, i * Math.PI / 180, (i + 1.5) * Math.PI / 180);
+
+                    // Creamos un degradado que va desde el centro exacto hasta el radio exterior
+                    let gradient = bgCtx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+                    gradient.addColorStop(0, `hsl(${i}, 0%, 50%)`); // Centro: Gris puro
+                    gradient.addColorStop(1, `hsl(${i}, 100%, 50%)`); // Borde: Color puro de ese ángulo
+                    
+                    bgCtx.fillStyle = gradient;
+                    bgCtx.fill(); // Rellenamos ese "porción de tarta"
+                }
+                bgDrawn = true; // Ya está renderizado, no volveremos a entrar aquí.
+            }
+
+            // PASO 2: Limpiar la pantalla real
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // PASO 3: Pegar la "foto" del fondo sobre la pantalla real (Súper eficiente)
+            ctx.drawImage(bgCanvas, 0, 0);
+
+            // PASO 4: Dibujar cada nodo (circulito) que tengamos en memoria
+            nodes.forEach((node, index) => {
+                // Ángulo final = Su ángulo guardado + Lo que diga el slider
+                const totalAngle = (node.baseAngle + offset) % 360;
+                const rad = totalAngle * Math.PI / 180; // Pasar a radianes
+                const nodeRadius = radius * node.s; // Distancia desde el centro (depende de su saturación)
+
+                // TRIGONOMETRÍA: Hallar coordenada X e Y (Cartesianas) a partir de Distancia y Ángulo (Polares)
+                const x = centerX + nodeRadius * Math.cos(rad);
+                const y = centerY + nodeRadius * Math.sin(rad);
+
+                // Dibujar el nodo
+                ctx.beginPath();
+                ctx.arc(x, y, 12, 0, Math.PI * 2); // Círculo de 12px de radio
+                ctx.fillStyle = hslToHex(totalAngle, node.s, node.l); // Lo rellenamos de su propio color exacto
+                ctx.fill();
+
+                ctx.lineWidth = 3;
+
+                // Estilizado dinámico del borde del nodo
+                if (currentMode !== 'manual' && index === 0) {
+                    // Si estamos en un modo auto, el primer nodo es el Maestro. Le ponemos borde punteado blanco.
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.setLineDash([3, 3]);
+                } else {
+                    // Si lo estamos arrastrando AHORA mismo, borde negro para distinguirlo. Sino, blanco normal.
+                    ctx.strokeStyle = (draggingNode && draggingNode.id === node.id) ? '#000000' : '#FFFFFF';
+                    ctx.setLineDash([]); // Borde sólido
+                }
+                ctx.stroke(); // Pintar el borde
+            });
+            // Limpieza: Asegurarnos de que el pincel vuelve a estar en modo línea sólida para el próximo ciclo
+            ctx.setLineDash([]);
+        }
+
+        // --- 5. GENERADOR AUTOMÁTICO DE PALETAS ---
+        function updateVariations() {
+            previewDiv.innerHTML = ''; // Vaciar la zona de vista previa del HTML
+            generatedCSS = ':root {\n'; // Empezar a redactar el código CSS para el botón de exportar
+
+            const offset = parseInt(globalRotInput.value);
+            // Array con los porcentajes de luz. 0.2 es casi negro, 0.5 puro, 0.85 es color pastel muy claro.
+            const lightnessSteps = [0.2, 0.35, 0.5, 0.7, 0.85];
+
+            // Por cada nodo principal que exista...
+            nodes.forEach((node, index) => {
+                const currentHue = (node.baseAngle + offset) % 360;
+
+                // Creamos una columna vertical en el HTML
+                const colDiv = document.createElement('div');
+                colDiv.className = 'color-column';
+
+                // Por cada paso de luminosidad que definimos arriba...
+                lightnessSteps.forEach((l, stepIndex) => {
+                    const hex = hslToHex(currentHue, node.s, l); // Calculamos el hex final
+
+                    // Creamos el div del rectangulito de color
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch';
+                    swatch.style.backgroundColor = hex;
+                    swatch.textContent = hex;
+
+                    // Le programamos una acción: Al hacer clic, cópialo al portapapeles del PC/Móvil
+                    swatch.onclick = () => {
+                        navigator.clipboard.writeText(hex);
+                        const originalText = swatch.textContent;
+                        swatch.textContent = '¡Copiado!';
+                        setTimeout(() => swatch.textContent = originalText, 1000); // Vuelve al texto original tras 1 segundo
+                    };
+
+                    colDiv.appendChild(swatch);
+                    // Redactamos una línea de CSS usando Variables Nativas (ej: --color-1-shade-3: #FF00AA;)
+                    generatedCSS += `  --color-${index + 1}-shade-${stepIndex + 1}: ${hex};\n`;
+                });
+                previewDiv.appendChild(colDiv); // Inyectamos toda la columna terminada al HTML
+            });
+            generatedCSS += '}\n'; // Cerramos la declaración CSS principal
+        }
+
+        // Función enlazada al botón gigante de abajo
+        window.exportCSS = () => {
+            navigator.clipboard.writeText(generatedCSS); // Copia todo el texto gigante acumulado
+            const btn = document.getElementById('exportBtn');
+            btn.textContent = '¡CSS Copiado al portapapeles!';
+            setTimeout(() => btn.textContent = '📋 Copiar código CSS', 2000);
+        };
+
+        // --- 6. SINCRONIZADOR DEL DOM ---
+        // Borra todos los inputs de la barra lateral y los vuelve a crear basados en la memoria actual
+        function buildDOM() {
+            nodeListDiv.innerHTML = '';
+            const offset = parseInt(globalRotInput.value);
+
+            nodes.forEach((node, index) => {
+                const hex = hslToHex((node.baseAngle + offset) % 360, node.s, node.l);
+                const div = document.createElement('div');
+                div.className = 'node-item';
+
+                // Inyectamos el HTML. Nota cómo usamos data-id="${node.id}" para vincular este cajón HTML con su cerebro JS.
+                div.innerHTML = `
+                    <span class="node-label">N${index + 1}:</span>
+                    <input type="color" value="${hex}" data-id="${node.id}">
+                    <input type="text" value="${hex}" data-id="${node.id}" maxlength="7">
+                    ${currentMode === 'manual' ? `<button onclick="removeNode(${node.id})">Borrar</button>` : ''}
+                `;
+                nodeListDiv.appendChild(div);
+            });
+
+            // Tras cambiar los inputs, forzamos un repintado de gráficos y paletas
+            draw();
+            updateVariations();
+        }
+
+        // --- 7. MOTOR DE INTERACCIÓN (DRAG & DROP UNIFICADO) ---
+        
+        // Traduce coordenadas de pantalla reales a coordenadas relativas del canvas
+        function getMousePos(evt) {
+            const rect = canvas.getBoundingClientRect(); // Obtiene las medidas exactas del canvas en pantalla
+            // Cálculo de escala (por si el CSS encogió el canvas en el móvil)
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            // Diferencia entre ratón (.clientX) y pantalla táctil (.touches[0].clientX)
+            const clientX = evt.touches && evt.touches.length > 0 ? evt.touches[0].clientX : evt.clientX;
+            const clientY = evt.touches && evt.touches.length > 0 ? evt.touches[0].clientY : evt.clientY;
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        // Evento 1: Pulsar el botón del ratón / Poner el dedo en pantalla
+        function handleStart(e) {
+            const pos = getMousePos(e), radius = 180, offset = parseInt(globalRotInput.value);
+
+            // Escaneamos los nodos al revés (del último dibujado al primero)
+            // Esto es crucial: si dos nodos están superpuestos, queremos agarrar el que está "arriba" visualmente.
+            for (let i = nodes.length - 1; i >= 0; i--) {
+                const node = nodes[i];
+                const rad = ((node.baseAngle + offset) % 360) * Math.PI / 180;
+
+                const nodeX = canvas.width / 2 + (radius * node.s) * Math.cos(rad);
+                const nodeY = canvas.height / 2 + (radius * node.s) * Math.sin(rad);
+
+                // Verificamos si tocamos el nodo. Hemos aumentado la zona de colisión (25) para que sea más fácil en pantallas táctiles pequeñas.
+                if (Math.sqrt((pos.x - nodeX) ** 2 + (pos.y - nodeY) ** 2) <= 25) {
+                    draggingNode = node; // ¡Encontrado! Lo registramos en memoria global
+                    break; // Cortamos el bucle, ya no buscamos más
+                }
+            }
+        }
+
+        // Evento 2: Mover el ratón / Arrastrar el dedo
+        function handleMove(e) {
+            if (!draggingNode) {
+                // Si NO tenemos nada agarrado, solo comprobamos el "hover" (para cambiar el cursor a manita en PC)
+                if (!e.touches) {
+                    const pos = getMousePos(e), radius = 180, offset = parseInt(globalRotInput.value);
+                    let isHovering = nodes.some(node => {
+                        const rad = ((node.baseAngle + offset) % 360) * Math.PI / 180;
+                        const nX = canvas.width / 2 + (radius * node.s) * Math.cos(rad);
+                        const nY = canvas.height / 2 + (radius * node.s) * Math.sin(rad);
+                        return Math.sqrt((pos.x - nX) ** 2 + (pos.y - nY) ** 2) <= 15;
+                    });
+                    canvas.style.cursor = isHovering ? 'pointer' : 'default';
+                }
+                return; // Fin de la función
+            }
+
+            // SI ESTAMOS ARRASTRANDO ALGO...
+            const pos = getMousePos(e), radius = 180, offset = parseInt(globalRotInput.value);
+            
+            // Distancia en ejes X e Y respecto al centro del canvas
+            let dx = pos.x - canvas.width / 2;
+            let dy = pos.y - canvas.height / 2;
+
+            // Recalcular la saturación (Qué tan lejos del centro está el cursor)
+            let distFromCenter = Math.sqrt(dx * dx + dy * dy);
+            let newS = Math.min(distFromCenter / radius, 1); // Limitamos a 1 (no puede salir del círculo)
+
+            // Recalcular el ángulo (Math.atan2 es una función mágica que saca el ángulo exacto entre dos coordenadas)
+            let angleRad = Math.atan2(dy, dx);
+            let angleDeg = (angleRad * 180 / Math.PI + 360) % 360;
+
+            if (currentMode !== 'manual') {
+                // COMPORTAMIENTO AUTOMÁTICO (Las reglas de Paletton)
+                // Calculamos cuántos grados ha girado el nodo que estamos tocando
+                const angleDiff = angleDeg - (draggingNode.baseAngle + offset);
+                
+                // Le aplicamos EXACTAMENTE esa misma diferencia de grados a TODOS los nodos a la vez
+                nodes.forEach(n => {
+                    n.baseAngle = (n.baseAngle + angleDiff + 360) % 360;
+                    n.s = newS; // Y forzamos que todos tengan la misma saturación que nuestro dedo
+                });
+            } else {
+                // COMPORTAMIENTO LIBRE
+                // Movemos solo el nodo actual
+                draggingNode.baseAngle = (angleDeg - offset + 360) % 360;
+                draggingNode.s = newS;
+            }
+
+            // ACTUALIZACIÓN DE INTERFAZ EN TIEMPO REAL (60fps)
+            // No usamos buildDOM() porque destruir y crear inputs de texto tan rápido causa un parpadeo terrible y deselecciona el input del usuario.
+            // En su lugar, buscamos los elementos HTML existentes y solo les cambiamos el atributo .value.
+            nodes.forEach(node => {
+                const hex = hslToHex((node.baseAngle + offset) % 360, node.s, node.l);
+                const colorInput = document.querySelector(`input[type="color"][data-id="${node.id}"]`);
+                const textInput = document.querySelector(`input[type="text"][data-id="${node.id}"]`);
+                if (colorInput) colorInput.value = hex;
+                if (textInput) textInput.value = hex;
+            });
+
+            draw(); // Pinta el frame
+            updateVariations(); // Recalcula la paleta de brillos
+        }
+
+        // Evento 3: Soltar clic / Levantar dedo
+        function handleEnd() {
+            if (draggingNode) {
+                draggingNode = null; // Vaciamos la memoria
+                draw(); // Redibujamos una vez más para quitarle el borde de selección negro
+            }
+        }
+
+        // ASIGNACIÓN DE EVENTOS AL NAVEGADOR
+        // Ratón (Ordenador)
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd); // Escuchamos el mouseup en toda la ventana por si soltó el clic fuera del canvas
+
+        // Pantallas táctiles (Móviles / Tablets)
+        // { passive: false } es necesario para que el e.preventDefault() funcione y bloquee el scroll del móvil
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleStart(e);
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handleMove(e);
+        }, { passive: false });
+
+        window.addEventListener('touchend', handleEnd);
+
+        // --- 8. EVENTOS DE INTERFAZ HTML SECUNDARIOS ---
+        
+        // Cuando el usuario teclea algo en los inputs de la barra derecha
+        nodeListDiv.addEventListener('input', (e) => {
+            const val = e.target.value;
+            // Expresión Regular: Asegura que el texto sea un '#' seguido de exactamente 6 caracteres válidos en Hexadecimal.
+            const hexRegex = /^#[0-9A-Fa-f]{6}$/i;
+
+            if (hexRegex.test(val)) {
+                // Si el usuario edita un color a mano, se rompe la geometría. Forzamos modo manual por seguridad.
+                if (currentMode !== 'manual') setMode('manual');
+
+                const id = parseFloat(e.target.dataset.id);
+                const node = nodes.find(n => n.id === id); // Busca el objeto JS
+                const hsl = hexToHSL(val); // Lo traduce a matemáticas
+
+                // Actualiza memoria
+                node.baseAngle = (hsl.h - parseInt(globalRotInput.value) + 360) % 360;
+                node.s = hsl.s; node.l = hsl.l;
+
+                // Actualiza al hermano de UI (Si tocaste el texto, actualiza el color picker, y viceversa)
+                const parent = e.target.parentElement;
+                if (e.target.type === 'text') parent.querySelector('input[type="color"]').value = val;
+                else parent.querySelector('input[type="text"]').value = val.toUpperCase();
+
+                draw(); updateVariations();
+            }
+        });
+
+        // Botón "Añadir"
+        document.getElementById('addNode').onclick = () => {
+            // Empuja un nuevo nodo con ID único y posición aleatoria (Math.random)
+            nodes.push({ id: Date.now(), baseAngle: Math.random() * 360, s: 1, l: 0.5 });
+            buildDOM();
+        };
+
+        // Función global enlazada a los botones HTML "Borrar"
+        window.removeNode = (id) => {
+            // Filtra la lista quitando el que coincida con el ID
+            nodes = nodes.filter(n => n.id !== id);
+            buildDOM();
+        };
+
+        // Movimiento de la barra "Rotación Global"
+        globalRotInput.oninput = () => {
+            const offset = parseInt(globalRotInput.value);
+
+            nodes.forEach(node => {
+                const hex = hslToHex((node.baseAngle + offset) % 360, node.s, node.l);
+                const colorInput = document.querySelector(`input[type="color"][data-id="${node.id}"]`);
+                const textInput = document.querySelector(`input[type="text"][data-id="${node.id}"]`);
+
+                if (colorInput) colorInput.value = hex;
+                // document.activeElement nos dice dónde está el cursor del teclado. 
+                // Evitamos sobrescribir el texto de un input si el usuario justo estaba escribiendo ahí en ese momento.
+                if (textInput && document.activeElement !== textInput) textInput.value = hex;
+            });
+            draw(); updateVariations();
+        };
+
+        // --- 9. INICIO ---
+        // Simula que el usuario hizo clic en "Tríada" al entrar a la web por primera vez.
+        setMode('triad'); 
+    </script>
+</body>
+
+</html>

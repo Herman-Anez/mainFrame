@@ -1,4 +1,36 @@
 {
+    "customFileOrder.rules": {
+        "/home/hermandev/Documents/proyectos/mainFrame/codigo personal": {
+            "order": [
+                "aux"
+            ],
+            "type": "manual"
+        },
+        "/home/hermandev/Documents/proyectos/mainFrame": {
+            "order": [
+                "mainframe",
+                "aaaux",
+                "codigo personal",
+                "Datos de prueba",
+                "instrucciones",
+                "notas de cursos",
+                ".vscode",
+                "Notas de cursos",
+                "preguntas-ia",
+                "react-app",
+                ".gitignore",
+                "aaux.md",
+                "hoy.md",
+                "index.md",
+                "por-aprender.md",
+                "por-leer.md",
+                "README.md",
+                "script.js",
+                "stack-overflow.md"
+            ],
+            "type": "manual"
+        }
+    }
     /*
         #395036 background oscuro
         #354631 background claro

@@ -24,7 +24,7 @@ Ctrl + alt + z extencions
   "command": "editor.action.toggleRenderWhitespace"
 }
 {
-  "key": "ctrl+m ctrl+m",//arregla los problemas markdown
+  "key": "ctrl+m ctrl+m",//arregla los problemas
   "command": "markdownlint.fixAll"
 }
 {

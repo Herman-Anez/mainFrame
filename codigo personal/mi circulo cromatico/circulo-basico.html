@@ -8,7 +8,7 @@
         /* Mantenemos los mismos estilos corregidos que ya funcionan bien */
         * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-seArif;
             background: #e2e8f0;
             display: flex;
             justify-content: center;
@@ -25,7 +25,7 @@
             display: flex;
             gap: 2rem;
             flex-wrap: wrap;
-            height: 805px ;
+            height: auto;
             justify-content: center;
             max-width: 1200px;
             width: 100%;
@@ -260,6 +260,16 @@
                 📍 Radio efectivo: 100% (máximo)
             </div>
         </div>
+        <div class="radius-control">
+            <label>
+                🔄 Rotación Global de Nodos
+                <span id="rotationLabel" class="radius-value">0°</span>
+            </label>
+            <input type="range" id="rotationSlider" min="0" max="360" value="0" step="1">
+            <div class="info-text">
+                🔆 Arrastra el slider para girar todos los nodos uniformemente sin perder su distancia al centro.
+            </div>
+        </div>
         <div id="nodesContainer" class="nodes-list">
             <div style="text-align:center; color:#94a3b8;">✨ Haz clic dentro del círculo naranja</div>
         </div>
@@ -280,6 +290,8 @@
     let nodes = [];
     let effectiveRadiusPercent = 100;
     let effectiveRadius = radiusTotal;
+    let rotationAngle = 0; // Ángulo actual de rotación global en grados
+    let draggedNodeIndex = -1; // Índice del nodo que se está arrastrando
 
     // --- Buffer para el fondo estático (círculo cromático) ---
     let backgroundImageData = null;
@@ -519,7 +531,35 @@
         updateNodeList();
     }
 
-    // ==================== 11. SLIDER ====================
+    // ==================== 11. ROTACIÓN ====================
+    function rotateAllNodes(newAngleDeg) {
+        const delta = (newAngleDeg - rotationAngle) * (Math.PI / 180);
+        rotationAngle = newAngleDeg;
+        
+        nodes.forEach(node => {
+            const dx = node.x - cx;
+            const dy = node.y - cy;
+            const dist = Math.hypot(dx, dy);
+            const currentAngle = Math.atan2(dy, dx);
+            const nextAngle = currentAngle + delta;
+            
+            node.x = cx + Math.cos(nextAngle) * dist;
+            node.y = cy + Math.sin(nextAngle) * dist;
+            
+            // Actualizar color basado en nueva posición al rotar
+            const color = getColorAtLogical(node.x, node.y);
+            if (color) {
+                node.r = color.r;
+                node.g = color.g;
+                node.b = color.b;
+            }
+        });
+        
+        refreshCanvas();
+        updateNodeList();
+    }
+
+    // ==================== 12. CONTROLES (SLIDERS) ====================
     function setupRadiusSlider() {
         const slider = document.getElementById('radiusSlider');
         const percentLabel = document.getElementById('radiusPercentLabel');
@@ -536,7 +576,17 @@
         update();
     }
 
-    // ==================== 12. SEGUIMIENTO DEL CURSOR ====================
+    function setupRotationSlider() {
+        const slider = document.getElementById('rotationSlider');
+        const label = document.getElementById('rotationLabel');
+        slider.addEventListener('input', () => {
+            const val = parseInt(slider.value, 10);
+            label.innerText = `${val}°`;
+            rotateAllNodes(val);
+        });
+    }
+
+    // ==================== 13. SEGUIMIENTO DEL CURSOR Y ARRASTRE ====================
     function setupCursorTracker() {
         const coordsSpan = document.getElementById('cursorCoords');
         const rgbSpan = document.getElementById('cursorRgb');
@@ -547,12 +597,18 @@
             coordsSpan.innerText = `(${Math.round(logical.x)}, ${Math.round(logical.y)})`;
             const insideFull = isInsideFullCircle(logical.x, logical.y);
             const insideLimit = isInsideEffectiveRadius(logical.x, logical.y);
+            
+            // Cambiar cursor si está sobre un nodo para indicar que es arrastrable
+            const overNode = nodes.some(n => Math.hypot(n.x - logical.x, n.y - logical.y) < 10);
+            canvas.style.cursor = overNode ? 'move' : 'crosshair';
+
             if (insideFull) {
                 const color = getColorAtLogical(logical.x, logical.y);
                 if (color) {
                     rgbSpan.innerText = `rgb(${color.r}, ${color.g}, ${color.b})`;
                     previewDiv.style.backgroundColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
                 }
+                // ... (resto del código de mensajes de límite queda igual)
                 if (!insideLimit && effectiveRadiusPercent < 100) {
                     limitMsgSpan.innerHTML = '⚠️ Fuera del límite activo → no se puede agregar nodo';
                     limitMsgSpan.style.color = '#ea580c';
@@ -576,19 +632,65 @@
         });
     }
 
-    function setupClickToAddNode() {
-        canvas.addEventListener('click', (e) => {
+    function setupInteraction() {
+        canvas.addEventListener('mousedown', (e) => {
             const logical = mouseToLogical(e.clientX, e.clientY);
-            addNodeAtLogical(logical.x, logical.y);
+            
+            // Detectar si click sobre nodo existente para arrastrar
+            const hitIndex = nodes.findIndex(n => Math.hypot(n.x - logical.x, n.y - logical.y) < 12);
+            
+            if (hitIndex !== -1) {
+                draggedNodeIndex = hitIndex;
+            } else {
+                // Si no hay nodo, intentar agregar uno
+                addNodeAtLogical(logical.x, logical.y);
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (draggedNodeIndex === -1) return;
+            
+            const logical = mouseToLogical(e.clientX, e.clientY);
+            const node = nodes[draggedNodeIndex];
+            
+            // Restringir al círculo total
+            const dist = Math.hypot(logical.x - cx, logical.y - cy);
+            if (dist <= radiusTotal) {
+                // Si está fuera del radio efectivo, lo pegamos al borde
+                if (dist > effectiveRadius) {
+                    const angle = Math.atan2(logical.y - cy, logical.x - cx);
+                    node.x = cx + Math.cos(angle) * effectiveRadius;
+                    node.y = cy + Math.sin(angle) * effectiveRadius;
+                } else {
+                    node.x = logical.x;
+                    node.y = logical.y;
+                }
+                
+                // Muestrear color en nueva posición
+                const color = getColorAtLogical(node.x, node.y);
+                if (color) {
+                    node.r = color.r;
+                    node.g = color.g;
+                    node.b = color.b;
+                }
+                
+                refreshCanvas();
+                updateNodeList();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            draggedNodeIndex = -1;
         });
     }
 
-    // ==================== 13. INICIALIZACIÓN ====================
+    // ==================== 14. INICIALIZACIÓN ====================
     function init() {
         drawStaticBackground();      // fondo pesado una sola vez
         setupRadiusSlider();
+        setupRotationSlider();
         setupCursorTracker();
-        setupClickToAddNode();
+        setupInteraction();
         document.getElementById('clearNodesBtn').addEventListener('click', clearAllNodes);
         updateNodeList();
         refreshCanvas();            // muestra el fondo + nodos (vacío) + límite

@@ -1,0 +1,219 @@
+* { box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-seArif;
+    background: #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    background: #ffffff;
+    border-radius: 2rem;
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    height: auto;
+    justify-content: center;
+    max-width: 1200px;
+    width: 100%;
+}
+.canvas-area {
+    text-align: center;
+    flex: 1;
+    min-width: 260px;
+}
+canvas {
+    display: block;
+    margin: 0 auto;
+    border-radius: 18px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    cursor: crosshair;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+}
+.info-panel {
+    width: 300px;
+    background: #fefefe;
+    border-radius: 1.5rem;
+    padding: 1.2rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef2f6;
+}
+.info-panel h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+}
+.cursor-color {
+    background: #f1f5f9;
+    border-radius: 1rem;
+    padding: 0.8rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+.cursor-color span {
+    font-weight: 700;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+}
+.rgb-badge {
+    background: #cbd5e1;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    display: inline-block;
+}
+#cursorPreview {
+    width: 100%;
+    height: 32px;
+    border-radius: 40px;
+    margin-top: 8px;
+    border: 1px solid #cbd5e1;
+}
+.radius-control {
+    background: #f8fafc;
+    border-radius: 1rem;
+    padding: 0.8rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid #e2e8f0;
+}
+.radius-control label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #0f172a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+input[type="range"] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    background: linear-gradient(90deg, #3b82f6, #f97316);
+    border-radius: 10px;
+    outline: none;
+    margin: 12px 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid #f97316;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: 0.1s;
+}
+.radius-value {
+    font-family: monospace;
+    background: #1e293b;
+    color: white;
+    padding: 0.2rem 0.7rem;
+    border-radius: 40px;
+    font-size: 0.8rem;
+}
+.info-text {
+    font-size: 0.75rem;
+    color: #334155;
+    text-align: center;
+    margin-top: 8px;
+    background: #eef2ff;
+    padding: 6px 8px;
+    border-radius: 28px;
+}
+.nodes-list {
+    max-height: 280px;
+    overflow-y: auto;
+    margin: 1rem 0;
+    border-radius: 1rem;
+    background: #fcfcfc;
+    padding: 0 2px;
+}
+.node-item {
+    background: white;
+    border-left: 4px solid;
+    border-radius: 12px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.7rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.node-item:hover {
+    background: #fff7e5;
+    transform: translateX(3px);
+}
+.node-info {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    line-height: 1.4;
+}
+.delete-btn {
+    background: #ef4444;
+    border: none;
+    color: white;
+    border-radius: 30px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+button.clear-btn {
+    background: #475569;
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 40px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.footer-note {
+    font-size: 0.7rem;
+    text-align: center;
+    margin-top: 1rem;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 8px;
+    border-radius: 28px;
+}
+.limit-badge {
+    background: #ffedd5;
+    font-size: 0.7rem;
+    border-radius: 20px;
+    padding: 6px 8px;
+    text-align: center;
+    margin-top: 10px;
+    color: #9a3412;
+}
+@media (max-width: 700px) {
+    .container { padding: 1rem; gap: 1.2rem; }
+    .info-panel { width: 100%; max-width: 360px; }
+}
