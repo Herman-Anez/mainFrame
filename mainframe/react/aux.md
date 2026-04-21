@@ -1,62 +1,59 @@
-## ¿Qué es React?
+## 1. ¿Qué es React?
 
-React es una biblioteca de JavaScript (no un framework) creada por Facebook para construir interfaces de usuario (UI). Se basa en componentes: piezas reutilizables e independientes que gestionan su propio estado y se combinan para formar pantallas completas.
+React es una biblioteca de JavaScript (no un framework) creada por Facebook para construir interfaces de usuario (UI). Se basa en **componentes**: piezas reutilizables e independientes que gestionan su propio estado y se combinan para formar pantallas completas.
 
-Características clave:
+**Características clave:**
 
-- Declarativo: describes qué UI quieres para cada estado, y React se encarga de actualizar y renderizar eficientemente.
+- **Declarativo:** Describes qué UI quieres para cada estado, y React se encarga de actualizar y renderizar eficientemente.
+- **Basado en componentes:** Encapsulan estructura, estilo y comportamiento.
+- **Unidireccional:** Los datos fluyen de padres a hijos mediante props.
+- **Virtual DOM:** Mejora el rendimiento al minimizar operaciones directas sobre el DOM real.
 
-- Basado en componentes: encapsulan estructura, estilo y comportamiento.
+---
 
-- Unidireccional: los datos fluyen de padres a hijos mediante props.
+## 2. Virtual DOM y cómo funciona
 
-- Virtual DOM: mejora el rendimiento al minimizar operaciones directas sobre el DOM real.
+El DOM real es lento de manipular directamente. React mantiene una copia ligera en memoria: el **Virtual DOM**. Cuando cambia el estado de un componente:
 
-## Virtual DOM y cómo funciona
-
-El DOM real es lento de manipular directamente. React mantiene una copia ligera en memoria: el Virtual DOM. Cuando cambia el estado de un componente:
-
-- Se crea un nuevo árbol Virtual DOM.
-
-- React compara (diffing) el nuevo con el anterior.
-
-- Calcula el conjunto mínimo de cambios necesarios.
-
-- Aplica solo esos cambios al DOM real (reconciliación).
+1. Se crea un nuevo árbol Virtual DOM.
+2. React compara (*diffing*) el nuevo con el anterior.
+3. Calcula el conjunto mínimo de cambios necesarios.
+4. Aplica solo esos cambios al DOM real (*reconciliación*).
 
 Esto permite actualizaciones eficientes sin que tú tengas que tocar el DOM manualmente.
 
-## JSX: JavaScript + XML/HTML
+---
+
+## 3. JSX: JavaScript + XML/HTML
 
 JSX es una extensión de sintaxis que te permite escribir HTML dentro de JavaScript. No es obligatorio, pero es la forma estándar de definir la UI en React.
-jsx
 
-`const elemento = <h1>Hola, mundo</h1>;`
+```jsx
+const elemento = <h1>Hola, mundo</h1>;
+```
 
-Bajo el capó, JSX se transforma en llamadas a React.createElement():
-jsx
+Bajo el capó, JSX se transforma en llamadas a `React.createElement()`:
 
-```JSX
+```jsx
 const elemento = <h1 className="saludo">Hola</h1>;
+
 // Se compila a:
 const elemento = React.createElement('h1', { className: 'saludo' }, 'Hola');
 ```
 
 ### Reglas importantes de JSX
 
-- Cada componente debe devolver un único elemento raíz (puedes usar <Fragment> o <>...</>).
+- Cada componente debe devolver un **único elemento raíz** (puedes usar `<Fragment>` o `<>...</>`).
+- Las etiquetas deben **cerrarse** (`<img />`, `<input />`).
+- Usa `className` en lugar de `class` (porque `class` es palabra reservada en JS).
+- Puedes incrustar expresiones JavaScript dentro de `{}`: `{variable}`, `{2+2}`, `{cond ? 'A' : 'B'}`.
 
-- Las etiquetas deben cerrarse (<img />, <input />).
+---
 
-- Usa className en lugar de class (porque class es palabra reservada en JS).
+## 4. Componentes: Funcionales vs Clase
 
-- Puedes incrustar expresiones JavaScript dentro de {}: {variable}, {2+2}, {cond ? 'A' : 'B'}.
-
-## Componentes: Funcionales vs Clase
-
-### Componentes funcionales (
-
-Son funciones que reciben props y retornan JSX.
+### Componentes Funcionales
+Son funciones que reciben props y retornan JSX. Son la forma recomendada actualmente.
 
 ```jsx
 function Saludo(props) {
@@ -64,9 +61,8 @@ function Saludo(props) {
 }
 ```
 
-### Componentes de clase (antiguos, pero los verás en código legacy)
-
-Extienden React.Component y tienen un método render().
+### Componentes de Clase
+Extienden `React.Component` y tienen un método `render()`. (Antiguos, pero los verás en código legacy).
 
 ```jsx
 class Saludo extends React.Component {
@@ -76,37 +72,41 @@ class Saludo extends React.Component {
 }
 ```
 
-¿Por qué funcionales? Son más simples, menos código, y con los Hooks (desde React 16.8) pueden hacer todo lo que hacían las clases (estado, ciclo de vida, etc.).
+> [!NOTE]
+> **¿Por qué funcionales?** Son más simples, requieren menos código y, con los Hooks (desde React 16.8), pueden hacer todo lo que hacían las clases (estado, ciclo de vida, etc.).
 
+---
 
-## Props: comunicación padre → hijo
+## 5. Props: Comunicación Padre → Hijo
 
-Las props (propiedades) son datos de solo lectura que un padre pasa a un hijo. El hijo no puede modificar sus propias props.
-jsx
+Las **props** (propiedades) son datos de solo lectura que un padre pasa a un hijo. El hijo no puede modificar sus propias props.
 
+```jsx
 // Padre
 function App() {
   return <Saludo nombre="María" edad={25} />;
 }
 
 // Hijo
-function Saludo({ nombre, edad }) {  // destructuring
+function Saludo({ nombre, edad }) {  // Destructuring
   return <p>{nombre} tiene {edad} años</p>;
 }
+```
 
-    Las props pueden ser strings, números, booleanos, arrays, objetos, funciones...
+- Pueden ser strings, números, booleanos, arrays, objetos, funciones...
+- Las props **no se deben modificar** dentro del componente hijo.
 
-    Las props no se deben modificar dentro del componente hijo.
+---
 
-6. Estado (state) y useState
+## 6. Estado (State) y `useState`
 
-El estado es información interna que un componente puede modificar, y cada cambio provoca un re-render. En componentes funcionales usamos el Hook useState.
-jsx
+El estado es información interna que un componente puede modificar, y cada cambio provoca un re-render. En componentes funcionales usamos el Hook `useState`.
 
+```jsx
 import { useState } from 'react';
 
 function Contador() {
-  const [contador, setContador] = useState(0); // valor inicial 0
+  const [contador, setContador] = useState(0); // Valor inicial 0
 
   return (
     <div>
@@ -117,48 +117,48 @@ function Contador() {
     </div>
   );
 }
+```
 
-    useState devuelve un array: [estadoActual, funciónActualizadora].
+- `useState` devuelve un array: `[estadoActual, funciónActualizadora]`.
+- La actualización puede ser un valor directo o una función: `setContador(prev => prev + 1)`.
+- Cuando el estado cambia, React re-renderiza el componente y sus hijos.
 
-    La actualización puede ser un valor directo o una función (si depende del estado previo): setContador(prev => prev + 1).
+---
 
-    Cuando el estado cambia, React re-renderiza el componente y sus hijos (salvo optimizaciones).
+## 7. Efectos Secundarios y `useEffect`
 
-7. Efectos secundarios y useEffect
+`useEffect` permite ejecutar código cuando el componente se monta, actualiza o desmonta.
 
-useEffect permite ejecutar código cuando el componente se monta, actualiza o desmonta. Es el reemplazo de los métodos de ciclo de vida de clases (componentDidMount, componentDidUpdate, componentWillUnmount).
-jsx
-
+```jsx
 import { useState, useEffect } from 'react';
 
 function Reloj() {
   const [fecha, setFecha] = useState(new Date());
 
   useEffect(() => {
-    // Efecto: se ejecuta después del primer render (montaje)
+    // Montaje: se ejecuta después del primer render
     const timer = setInterval(() => setFecha(new Date()), 1000);
 
-    // Cleanup: se ejecuta antes de desmontar y antes del próximo efecto
+    // Cleanup: se ejecuta al desmontar el componente
     return () => clearInterval(timer);
   }, []); // Array de dependencias vacío => solo montaje/desmontaje
 
   return <p>{fecha.toLocaleTimeString()}</p>;
 }
+```
 
-Dependencias:
+**Dependencias:**
+- `[]` → Solo al montar y desmontar.
+- `[var1, var2]` → Cada vez que `var1` o `var2` cambien.
+- Sin array → Después de **cada** render.
 
-    [] → solo al montar y desmontar.
+---
 
-    [var1, var2] → cada vez que var1 o var2 cambien.
+## 8. Renderizado Condicional
 
-    Sin array → después de cada render.
+Puedes usar JavaScript normal (`if`, operador ternario, `&&` lógico) dentro del JSX.
 
-Usos típicos: llamadas a APIs, suscripciones, timers, manipulación manual del DOM.
-8. Renderizado condicional
-
-Puedes usar JavaScript normal (if, operador ternario, && lógico) dentro del JSX.
-jsx
-
+```jsx
 function Mensaje({ isLoggedIn }) {
   return (
     <div>
@@ -167,17 +167,20 @@ function Mensaje({ isLoggedIn }) {
       ) : (
         <button>Iniciar sesión</button>
       )}
+      {/* Short-circuit operator */}
+      {isLoggedIn && <PanelAdmin />}
     </div>
   );
 }
+```
 
-// También: {isLoggedIn && <PanelAdmin />}
+---
 
-1. Listas y keys
+## 9. Listas y Keys
 
-Para renderizar arrays de elementos, usa map(). Cada elemento debe tener una key única (estable, predecible, no el índice a menos que la lista sea estática).
-jsx
+Para renderizar arrays de elementos, usa `map()`. Cada elemento debe tener una `key` única.
 
+```jsx
 function ListaTareas({ tareas }) {
   return (
     <ul>
@@ -187,26 +190,30 @@ function ListaTareas({ tareas }) {
     </ul>
   );
 }
+```
 
-Las key ayudan a React a identificar qué elementos cambiaron, se añadieron o eliminaron, mejorando el rendimiento.
-10. Manejo de eventos y formularios
+Las `key` ayudan a React a identificar qué elementos cambiaron, mejorando el rendimiento.
 
-Los eventos en React se nombran con camelCase (onClick, onSubmit) y reciben una función, no un string.
-jsx
+---
 
+## 10. Manejo de Eventos y Formularios
+
+Los eventos en React se nombran con camelCase (`onClick`, `onSubmit`) y reciben una función.
+
+```jsx
 function Boton() {
   const handleClick = (e) => {
-    e.preventDefault(); // importante para formularios
-    console.log('clickeado');
+    e.preventDefault(); 
+    console.log('Clickeado');
   };
   return <button onClick={handleClick}>Click</button>;
 }
+```
 
-Formularios controlados vs no controlados
+### Formularios Controlados
+El estado de React es la única fuente de verdad.
 
-Controlado: el estado de React es la única fuente de verdad. El valor del input está vinculado al estado.
-jsx
-
+```jsx
 function Formulario() {
   const [nombre, setNombre] = useState('');
 
@@ -217,71 +224,39 @@ function Formulario() {
     />
   );
 }
+```
 
-No controlado: usas ref para leer el valor del DOM directamente (menos común, útil para integraciones con código no React). Se usa useRef.
-jsx
+---
 
-function Formulario() {
-  const inputRef = useRef(null);
+## 11. Hooks Esenciales (además de `useState` y `useEffect`)
 
-  const handleSubmit = () => {
-    alert(inputRef.current.value);
-  };
+- **`useContext`:** Consume un Context sin anidar componentes.
+- **`useReducer`:** Alternativa a `useState` para lógica de estado compleja.
+- **`useRef`:** Guarda un valor mutable que no causa re-render. Muy usado para acceder al DOM.
+- **`useMemo`:** Memoriza el resultado de una función costosa.
+- **`useCallback`:** Memoriza una función para evitar recreaciones innecesarias.
 
-  return <input ref={inputRef} />;
-}
-
-1. Hooks esenciales (además de useState y useEffect)
-
-    useContext: consume un Context (ver más abajo) sin anidar componentes.
-
-    useReducer: alternativa a useState para lógica de estado compleja (múltiples sub-valores o transiciones dependientes). Es como un mini Redux.
-
-jsx
-
-const initialState = { count: 0 };
-function reducer(state, action) {
-  switch (action.type) {
-    case 'increment': return { count: state.count + 1 };
-    case 'decrement': return { count: state.count - 1 };
-    default: return state;
-  }
-}
+```jsx
+// Ejemplo useReducer
 const [state, dispatch] = useReducer(reducer, initialState);
+```
 
-    useRef: guarda un valor mutable que no causa re-render cuando cambia. Muy usado para referencias a elementos del DOM o para guardar valores previos.
+---
 
-    useMemo: memoriza el resultado de una función costosa para que no se recalcule en cada render a menos que sus dependencias cambien.
+## 12. Comunicación entre Componentes
 
-    useCallback: similar pero memoriza la función en sí, útil para pasarla a hijos optimizados con React.memo.
+- **Padre → Hijo:** Mediante `props`.
+- **Hijo → Padre:** El padre pasa una función como prop, el hijo la llama con datos.
+- **Entre hermanos:** "Levantar el estado" (*lifting state up*) al ancestro común.
+- **Componentes no relacionados:** Context API o librerías alternativas (Redux, Zustand).
 
-12. Comunicación entre componentes
+---
 
-    Padre → Hijo: props.
+## 13. Context API (Estado Global Ligero)
 
-    Hijo → Padre: el padre pasa una función como prop, el hijo la llama con datos.
+Evita el *prop drilling*. Crea un contexto, provee un valor y consúmelo en cualquier descendiente.
 
-    Entre hermanos: "levantar el estado" (lifting state up): el estado común se mueve al primer ancestro común, y se pasan datos y callbacks mediante props.
-
-jsx
-
-function Padre() {
-  const [valor, setValor] = useState('');
-  return (
-    <>
-      <HijoEntrada onCambio={setValor} />
-      <HijoSalida texto={valor} />
-    </>
-  );
-}
-
-    Componentes no relacionados: Context API o librerías externas (Redux, Zustand).
-
-13. Context API (estado global ligero)
-
-Evita el "prop drilling" (pasar props por muchos niveles). Crea un contexto, provee un valor y consúmelo en cualquier descendiente.
-jsx
-
+```jsx
 const TemaContext = React.createContext('claro');
 
 function App() {
@@ -296,23 +271,48 @@ function Toolbar() {
   const tema = useContext(TemaContext);
   return <div>Tema actual: {tema}</div>;
 }
+```
 
-Para valores que cambian frecuentemente, combínalo con useState o useReducer.
-14. Estilos en React
+---
 
-    CSS tradicional: importa './MiComponente.css' y usa className.
+## 14. Estilos en React
 
-    CSS Modules: archivo MiComponente.module.css, las clases se importan como objeto y son únicas localmente.
+Existen varias formas de aplicar estilos:
 
-    Styled-components (librería): escribe CSS dentro de JS usando tagged templates.
+1.  **CSS Tradicional:** Importa un archivo `.css` y usa `className`.
+    ```jsx
+    import './MiComponente.css';
+    function Componente() {
+      return <div className="contenedor">Hola</div>;
+    }
+    ```
 
-    Inline styles: style={{ color: 'red', backgroundColor: 'black' }} (camelCase).
+2.  **CSS Modules:** Archivos `.module.css`. Las clases son únicas localmente.
+    ```jsx
+    import styles from './MiComponente.module.css';
+    <div className={styles.contenedor}>...</div>
+    ```
 
-15. React Router (navegación en SPA)
+3.  **Styled Components:** CSS-in-JS.
+    ```jsx
+    const Button = styled.button`
+      background: blue;
+      color: white;
+    `;
+    ```
 
-React no tiene enrutador propio. La librería estándar es react-router-dom.
-jsx
+4.  **Inline Styles:** Atributo `style` con objeto JS (camelCase).
+    ```jsx
+    <div style={{ color: 'red', backgroundColor: 'black' }}>Texto</div>
+    ```
 
+---
+
+## 15. React Router (Navegación en SPA)
+
+Librería estándar: `react-router-dom`.
+
+```jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
 function App() {
@@ -329,56 +329,37 @@ function App() {
     </BrowserRouter>
   );
 }
+```
 
-1. Buenas prácticas y patrones comunes
+---
 
-    Componentes pequeños y con una sola responsabilidad.
+## 16. Buenas Prácticas y Patrones
 
-    Nombres claros: PascalCase para componentes, camelCase para variables/funciones.
+- Componentes pequeños con una sola responsabilidad.
+- **Nombres:** `PascalCase` para componentes, `camelCase` para variables.
+- **Hooks Personalizados:** Encapsulan lógica con estado para reutilizar.
+- **Memoización:** Usa `React.memo`, `useCallback` y `useMemo` solo cuando sea necesario.
 
-    Evita lógica en el JSX: sácala a funciones auxiliares o hooks personalizados.
+---
 
-    Hooks personalizados: encapsulan lógica con estado/efectos para reutilizar entre componentes.
+## 17. Ciclo de Vida (Resumen con `useEffect`)
 
-jsx
+| Clase (Lifecycle) | Funcional (`useEffect`) |
+| :--- | :--- |
+| `componentDidMount` | `useEffect(() => { ... }, [])` |
+| `componentDidUpdate` | `useEffect(() => { ... }, [deps])` |
+| `componentWillUnmount` | `return () => { ... }` (dentro de `useEffect`) |
 
-function useContador(inicial = 0) {
-  const [contador, setContador] = useState(inicial);
-  const incrementar = () => setContador(c => c + 1);
-  return [contador, incrementar];
-}
+---
 
-    React DevTools: extensión de navegador imprescindible para inspeccionar componentes, estado y props.
+## 18. Herramientas Recomendadas
 
-    Memoización selectiva: usa React.memo para evitar re-render innecesarios de componentes que reciben las mismas props, y useCallback/useMemo para estabilizar referencias.
+- **Vite:** El estándar actual para crear proyectos rápidos.
+- **Next.js:** Framework para SSR, SEO y rutas automáticas.
+- **React Query:** Excelente para manejo de datos asíncronos y caché.
+- **TypeScript:** Recomendado para robustez y autocompletado.
 
-17. Herramientas para empezar un proyecto
+---
 
-    Vite (recomendado hoy): npm create vite@latest mi-app -- --template react
-
-    Create React App (más legacy): npx create-react-app mi-app
-
-    Next.js (framework fullstack con React): si necesitas SSR, generación estática, rutas basadas en archivos.
-
-18. Ciclo de vida en componentes funcionales (resumen con useEffect)
-Clase Funcional (useEffect)
-componentDidMount useEffect(..., [])
-componentDidUpdate useEffect(..., [deps])
-componentWillUnmount return () => {...} dentro de useEffect
-
-Además, useLayoutEffect es similar pero se ejecuta sincrónicamente después de mutar el DOM (útil para medir elementos).
-19. ¿Qué más necesitas para tener una base completa?
-
-    Manejo de formularios complejos: librerías como React Hook Form.
-
-    Peticiones HTTP: fetch o librerías como Axios, normalmente dentro de useEffect o con librerías de gestión de estado asíncrono (React Query, SWR).
-
-    Gestión de estado avanzada: Redux Toolkit, Zustand, Jotai (cuando Context no es suficiente).
-
-    Testing: Jest + React Testing Library.
-
-    Renderizado en servidor (SSR): Next.js.
-
-    TypeScript: te da tipado estático y mejora la experiencia de desarrollo.
-
-Con estos conceptos tienes los cimientos para entender y construir aplicaciones React reales. Mi consejo: practica haciendo pequeños proyectos (lista de tareas, contador, tablero de notas, app del clima) y luego métete con un proyecto más grande usando enrutador y Context. No intentes abarcar todo de una vez; domina primero componentes, props, estado y efectos, y el resto vendrá naturalmente.
+> [!TIP]
+> **Camino de aprendizaje:** Domina primero componentes, props, estado y efectos. El resto vendrá con la práctica. ¡No intentes aprender todo a la vez!
