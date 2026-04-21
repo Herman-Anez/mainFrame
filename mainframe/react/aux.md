@@ -1,78 +1,85 @@
-1. ¿Qué es React?
+## ¿Qué es React?
 
 React es una biblioteca de JavaScript (no un framework) creada por Facebook para construir interfaces de usuario (UI). Se basa en componentes: piezas reutilizables e independientes que gestionan su propio estado y se combinan para formar pantallas completas.
 
 Características clave:
 
-    Declarativo: describes qué UI quieres para cada estado, y React se encarga de actualizar y renderizar eficientemente.
+- Declarativo: describes qué UI quieres para cada estado, y React se encarga de actualizar y renderizar eficientemente.
 
-    Basado en componentes: encapsulan estructura, estilo y comportamiento.
+- Basado en componentes: encapsulan estructura, estilo y comportamiento.
 
-    Unidireccional: los datos fluyen de padres a hijos mediante props.
+- Unidireccional: los datos fluyen de padres a hijos mediante props.
 
-    Virtual DOM: mejora el rendimiento al minimizar operaciones directas sobre el DOM real.
+- Virtual DOM: mejora el rendimiento al minimizar operaciones directas sobre el DOM real.
 
-2. Virtual DOM y cómo funciona
+## Virtual DOM y cómo funciona
 
 El DOM real es lento de manipular directamente. React mantiene una copia ligera en memoria: el Virtual DOM. Cuando cambia el estado de un componente:
 
-    Se crea un nuevo árbol Virtual DOM.
+- Se crea un nuevo árbol Virtual DOM.
 
-    React compara (diffing) el nuevo con el anterior.
+- React compara (diffing) el nuevo con el anterior.
 
-    Calcula el conjunto mínimo de cambios necesarios.
+- Calcula el conjunto mínimo de cambios necesarios.
 
-    Aplica solo esos cambios al DOM real (reconciliación).
+- Aplica solo esos cambios al DOM real (reconciliación).
 
 Esto permite actualizaciones eficientes sin que tú tengas que tocar el DOM manualmente.
-3. JSX: JavaScript + XML/HTML
+
+## JSX: JavaScript + XML/HTML
 
 JSX es una extensión de sintaxis que te permite escribir HTML dentro de JavaScript. No es obligatorio, pero es la forma estándar de definir la UI en React.
 jsx
 
-const elemento = <h1>Hola, mundo</h1>;
+`const elemento = <h1>Hola, mundo</h1>;`
 
 Bajo el capó, JSX se transforma en llamadas a React.createElement():
 jsx
 
-// JSX
+```JSX
 const elemento = <h1 className="saludo">Hola</h1>;
 // Se compila a:
 const elemento = React.createElement('h1', { className: 'saludo' }, 'Hola');
+```
 
-Reglas importantes de JSX:
+### Reglas importantes de JSX
 
-    Cada componente debe devolver un único elemento raíz (puedes usar <Fragment> o <>...</>).
+- Cada componente debe devolver un único elemento raíz (puedes usar <Fragment> o <>...</>).
 
-    Las etiquetas deben cerrarse (<img />, <input />).
+- Las etiquetas deben cerrarse (<img />, <input />).
 
-    Usa className en lugar de class (porque class es palabra reservada en JS).
+- Usa className en lugar de class (porque class es palabra reservada en JS).
 
-    Puedes incrustar expresiones JavaScript dentro de {}: {variable}, {2+2}, {cond ? 'A' : 'B'}.
+- Puedes incrustar expresiones JavaScript dentro de {}: {variable}, {2+2}, {cond ? 'A' : 'B'}.
 
-4. Componentes: Funcionales vs Clase
-Componentes funcionales (recomendados hoy)
+## Componentes: Funcionales vs Clase
+
+### Componentes funcionales (
 
 Son funciones que reciben props y retornan JSX.
-jsx
 
+```jsx
 function Saludo(props) {
   return <h1>Hola, {props.nombre}</h1>;
 }
+```
 
-Componentes de clase (antiguos, pero los verás en código legacy)
+### Componentes de clase (antiguos, pero los verás en código legacy)
 
 Extienden React.Component y tienen un método render().
-jsx
 
+```jsx
 class Saludo extends React.Component {
   render() {
     return <h1>Hola, {this.props.nombre}</h1>;
   }
 }
+```
 
 ¿Por qué funcionales? Son más simples, menos código, y con los Hooks (desde React 16.8) pueden hacer todo lo que hacían las clases (estado, ciclo de vida, etc.).
-5. Props: comunicación padre → hijo
+
+
+## Props: comunicación padre → hijo
 
 Las props (propiedades) son datos de solo lectura que un padre pasa a un hijo. El hijo no puede modificar sus propias props.
 jsx
