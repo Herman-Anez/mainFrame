@@ -1,21 +1,3 @@
-
-# Atajo de comandos de vs
-
-Ctrl+Shift+O || Cmd+P (and type an @) outline  
-
-Ctrl + Shift + x extencions
-
-Ctrl + alt + z extencions
-
-Ctrl+, abre las preferencias
-Ctrl+Alt+Down multiple cursores
-
-{
-  "key": "ctrl+alt+meta+n",
-  "command": "welcome.showNewFileEntries"
-}
-
-```Json
 [
   {
     "key": "ctrl+k ctrl+[Comma]",
@@ -80,4 +62,3 @@ Ctrl+Alt+Down multiple cursores
     "command": "workbench.action.remote.showMenu"
   },
 ]
-´´´
