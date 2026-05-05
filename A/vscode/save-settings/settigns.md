@@ -1,4 +1,9 @@
 {
+    //personal
+
+    //terminal abre en el archivo donde estamos
+    "terminal.integrated.cwd": "${workspaceFolder}"
+    
     "markdown-preview-enhanced.previewTheme": "atom-dark.css",
     "explorer.compactFolders": false,
     "chat.useAgentSkills": true,
@@ -112,4 +117,5 @@
     "editor.renderWhitespace": "none",
     "files.autoSave": "afterDelay",
     "markdown-preview-enhanced.plantumlServer":"https://kroki.io/plantuml/svg/"
+    
 }

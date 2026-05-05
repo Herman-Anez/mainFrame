@@ -1,1 +1,0 @@
-Maneja Contenedores Docker con interfaz grafica 
