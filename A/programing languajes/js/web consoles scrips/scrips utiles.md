@@ -89,5 +89,6 @@ var scroll = setInterval(function(){ window.scrollBy(0, 1000)}, 1000);
 
 // Second code (Updated):
 let count=0;
-window.clearInterval(scroll); console.clear(); urls = $$('a'); urls.forEach(function(v,i,a){if (v.id=="video-title-link"){console.log('\t'+ count++ +'\t'+v.title+'\t'+v.href+'\t')}});
+window.clearInterval(scroll); console.clear();
+urls = $$('a'); urls.forEach(function(v,i,a){if (v.id=="video-title-link"){console.log('\t'+ count++ +'\t'+v.title+'\t'+v.href+'\t')}});
 ```
